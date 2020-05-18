@@ -6,18 +6,13 @@
 
 ads--CDockContainerWidget
 {
-    background: palette(dark);
-}
-
-ads--CDockContainerWidget QSplitter::handle
-{
-    background: palette(dark);
+    background: palette(light);
 }
 
 ads--CDockAreaWidget
 {
     background: palette(window);
-    border: 1px solid white;
+    /*border: 1px solid palette(light);*/
 }
 
 ads--CDockAreaWidget #tabsMenuButton::menu-indicator
@@ -25,7 +20,7 @@ ads--CDockAreaWidget #tabsMenuButton::menu-indicator
     image: none;
 }
 
-
+/*
 ads--CDockWidgetTab
 {
     background: palette(window);
@@ -34,16 +29,23 @@ ads--CDockWidgetTab
     border-width: 0 1px 0 0;
     padding: 0 0px;
 }
+*/
+
+ads--CDockWidgetTab
+{
+    background: palette(window);
+    padding: 0 0px;
+    border: none;
+}
 
 ads--CDockWidgetTab[activeTab="true"]
 {
-    background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:0.5, stop:0 palette(window), stop:1 palette(light));
-    /*background: palette(highlight);*/
+    background: palette(base);
 }
 
 ads--CDockWidgetTab QLabel
 {
-    color: palette(dark);
+    color: palette(foreground);
 }
 
 ads--CDockWidgetTab[activeTab="true"] QLabel
@@ -54,9 +56,12 @@ ads--CDockWidgetTab[activeTab="true"] QLabel
 ads--CDockWidget
 {
     background: palette(light);
+    border: none;
+/*
     border-color: palette(light);
     border-style: solid;
     border-width: 1px 0 0 0;
+    */
 }
 
 ads--CTitleBarButton
@@ -74,21 +79,37 @@ QScrollArea#dockWidgetScrollArea
 
 #tabCloseButton
 {
-	margin-top: 2px;
 	background: none;
 	border: none;
-	padding: 0px -2px;
+        padding: 0px 0px;
+        image: url(":/icons/resources/CloseWindowIcon.png");
 }
 
 #tabCloseButton:hover
 {
-	border: 1px solid rgba(0, 0, 0, 32);
-	background: rgba(0, 0, 0, 16);
+        background-color: rgb(60,60,60);
+        border: none;
 }
 
 #tabCloseButton:pressed
 {
 	background: rgba(0, 0, 0, 32);
+}
+
+#undockButton
+{
+    background: none;
+    border: none;
+    padding: 0px 0px;
+    image: url(":/icons/resources/MinimizeWindowIcon.png");
+}
+
+#closeButton
+{
+    background: none;
+    border: none;
+    padding: 0px 0px;
+    image: url(":/icons/resources/CloseWindowIcon.png");
 }
 
 

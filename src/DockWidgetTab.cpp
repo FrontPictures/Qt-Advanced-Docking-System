@@ -185,7 +185,7 @@ void DockWidgetTabPrivate::createLayout()
 
 	CloseButton = createCloseButton();
 	CloseButton->setObjectName("tabCloseButton");
-	internal::setButtonIcon(CloseButton, QStyle::SP_TitleBarCloseButton, TabCloseIcon);
+	CloseButton->setFixedSize(22, 22);
     CloseButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     _this->onDockWidgetFeaturesChanged();
 	internal::setToolTip(CloseButton, QObject::tr("Close Tab"));
@@ -202,7 +202,6 @@ void DockWidgetTabPrivate::createLayout()
 	Layout->addWidget(TitleLabel, 1);
 	Layout->addSpacing(Spacing);
 	Layout->addWidget(CloseButton);
-	Layout->addSpacing(qRound(Spacing * 4.0 / 3.0));
 	Layout->setAlignment(Qt::AlignCenter);
 
 	TitleLabel->setVisible(true);
