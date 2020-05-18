@@ -165,7 +165,6 @@ void DockAreaTitleBarPrivate::createButtons()
 	UndockButton->setObjectName("undockButton");
 	UndockButton->setAutoRaise(true);
 	internal::setToolTip(UndockButton, QObject::tr("Detach Group"));
-	internal::setButtonIcon(UndockButton, QStyle::SP_TitleBarNormalButton, ads::DockAreaUndockIcon);
 	UndockButton->setSizePolicy(ButtonSizePolicy);
 	Layout->addWidget(UndockButton, 0);
 	_this->connect(UndockButton, SIGNAL(clicked()), SLOT(onUndockButtonClicked()));
@@ -174,7 +173,6 @@ void DockAreaTitleBarPrivate::createButtons()
 	CloseButton = new CTitleBarButton(testConfigFlag(CDockManager::DockAreaHasCloseButton));
 	CloseButton->setObjectName("closeButton");
 	CloseButton->setAutoRaise(true);
-	internal::setButtonIcon(CloseButton, QStyle::SP_TitleBarCloseButton, ads::DockAreaCloseIcon);
 	if (testConfigFlag(CDockManager::DockAreaCloseButtonClosesTab))
 	{
 		internal::setToolTip(CloseButton, QObject::tr("Close Active Tab"));
