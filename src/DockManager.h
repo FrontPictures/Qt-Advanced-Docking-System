@@ -279,6 +279,11 @@ public:
 	 */
 	void removeDockWidget(CDockWidget* Dockwidget);
 
+    /**
+     * Rename DockWidget title, tab, view action
+     */
+    void renameDockWidget(CDockWidget* Dockwidget, const QString &name);
+
 	/**
 	 * This function returns a readable reference to the internal dock
 	 * widgets map so that it is possible to iterate over all dock widgets
