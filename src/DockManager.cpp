@@ -581,7 +581,7 @@ bool CDockManager::restoreState(const QByteArray &state, int version)
 
 
 //============================================================================
-CFloatingDockContainer* CDockManager::addDockWidgetFloating(CDockWidget* Dockwidget)
+CFloatingDockContainer* CDockManager::addDockWidgetFloating(CDockWidget* Dockwidget, bool hide)
 {
 	d->DockWidgetsMap.insert(Dockwidget->objectName(), Dockwidget);
 	CDockAreaWidget* OldDockArea = Dockwidget->dockAreaWidget();
@@ -593,14 +593,19 @@ CFloatingDockContainer* CDockManager::addDockWidgetFloating(CDockWidget* Dockwid
 	Dockwidget->setDockManager(this);
 	CFloatingDockContainer* FloatingWidget = new CFloatingDockContainer(Dockwidget);
 	FloatingWidget->resize(Dockwidget->size());
-	if (isVisible())
+    if (isVisible() && !hide)
 	{
 		FloatingWidget->show();
-	}
-	else
+    }
+    else if(!hide)
 	{
 		d->UninitializedFloatingWidgets.append(FloatingWidget);
 	}
+    else
+    {
+        Dockwidget->closeDockWidget();
+        FloatingWidget->hide();
+    }
 	return FloatingWidget;
 }
 
@@ -616,7 +621,7 @@ void CDockManager::showEvent(QShowEvent *event)
 
 	for (auto FloatingWidget : d->UninitializedFloatingWidgets)
 	{
-		FloatingWidget->show();
+        FloatingWidget->show();
 	}
 	d->UninitializedFloatingWidgets.clear();
 }
