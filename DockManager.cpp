@@ -676,7 +676,24 @@ void CDockManager::removeDockWidget(CDockWidget* Dockwidget)
 	emit dockWidgetAboutToBeRemoved(Dockwidget);
 	d->DockWidgetsMap.remove(Dockwidget->objectName());
 	CDockContainerWidget::removeDockWidget(Dockwidget);
-	emit dockWidgetRemoved(Dockwidget);
+    emit dockWidgetRemoved(Dockwidget);
+}
+
+//============================================================================
+void CDockManager::renameDockWidget(CDockWidget *Dockwidget, const QString &name)
+{
+    CDockWidget *widget = nullptr;
+    for (auto it = d->DockWidgetsMap.begin(); it != d->DockWidgetsMap.end(); ++it) {
+        if (it.value() == Dockwidget) {
+            widget = Dockwidget;
+            break;
+        }
+    }
+    if (widget) {
+        d->DockWidgetsMap.remove(Dockwidget->objectName());
+        Dockwidget->renameDockWidget(name);
+        d->DockWidgetsMap[Dockwidget->objectName()] = Dockwidget;
+    }
 }
 
 //============================================================================
