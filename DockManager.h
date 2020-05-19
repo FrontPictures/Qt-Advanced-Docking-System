@@ -262,9 +262,10 @@ public:
 
 	/**
 	 * Adds the given DockWidget floating and returns the created
+     * if hide is true will hide widget window
 	 * CFloatingDockContainer instance.
 	 */
-	CFloatingDockContainer* addDockWidgetFloating(CDockWidget* Dockwidget);
+    CFloatingDockContainer* addDockWidgetFloating(CDockWidget* Dockwidget, bool hide = false);
 
 	/**
 	 * Searches for a registered doc widget with the given ObjectName
