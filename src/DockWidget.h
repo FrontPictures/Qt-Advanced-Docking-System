@@ -142,6 +142,11 @@ protected:
      */
     bool closeDockWidgetInternal(bool ForceClose = false);
 
+    /**
+     * Rename dock widget (title, tab)
+     */
+    void renameDockWidget(const QString &name);
+
 public:
     using Super = QFrame;
 

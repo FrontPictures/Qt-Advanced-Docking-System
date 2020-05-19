@@ -817,9 +817,8 @@ void CDockWidget::deleteDockWidget()
 //============================================================================
 void CDockWidget::closeDockWidget()
 {
-	closeDockWidgetInternal(true);
+    closeDockWidgetInternal(true);
 }
-
 
 //============================================================================
 bool CDockWidget::closeDockWidgetInternal(bool ForceClose)
@@ -859,9 +858,17 @@ bool CDockWidget::closeDockWidgetInternal(bool ForceClose)
     	toggleView(false);
     }
 
-	return true;
+    return true;
 }
 
+//============================================================================
+void CDockWidget::renameDockWidget(const QString &name)
+{
+    setWindowTitle(name);
+    setObjectName(name);
+    d->TabWidget->setText(name);
+    d->ToggleViewAction->setText(name);
+}
 
 //============================================================================
 void CDockWidget::setTitleBarActions(QList<QAction*> actions)
