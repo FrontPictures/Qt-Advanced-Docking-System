@@ -6,30 +6,18 @@
 
 ads--CDockContainerWidget
 {
-    background: palette(light);
+    background: #2e2e2e;
 }
 
 ads--CDockAreaWidget
 {
     background: palette(window);
-    /*border: 1px solid palette(light);*/
 }
 
 ads--CDockAreaWidget #tabsMenuButton::menu-indicator
 {
     image: none;
 }
-
-/*
-ads--CDockWidgetTab
-{
-    background: palette(window);
-    border-color: palette(light);
-    border-style: solid;
-    border-width: 0 1px 0 0;
-    padding: 0 0px;
-}
-*/
 
 ads--CDockWidgetTab
 {
@@ -57,11 +45,6 @@ ads--CDockWidget
 {
     background: palette(light);
     border: none;
-/*
-    border-color: palette(light);
-    border-style: solid;
-    border-width: 1px 0 0 0;
-    */
 }
 
 ads--CTitleBarButton
