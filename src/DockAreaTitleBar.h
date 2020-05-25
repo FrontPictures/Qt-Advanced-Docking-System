@@ -35,6 +35,7 @@
 #include "ads_globals.h"
 
 QT_FORWARD_DECLARE_CLASS(QAbstractButton)
+QT_FORWARD_DECLARE_CLASS(QMenu)
 
 namespace ads
 {
@@ -129,6 +130,12 @@ public:
 	 * implementation
 	 */
 	virtual void setVisible(bool Visible) override;
+
+    /**
+     * set menu to Group button
+     * clear old menu
+     */
+    void setGroupMenu(QMenu *menu);
 
 	/**
 	 * Inserts a custom widget at position index into this title bar.

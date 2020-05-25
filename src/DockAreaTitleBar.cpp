@@ -54,6 +54,12 @@
 
 #include <iostream>
 
+#define RE_LOG_ENABLE
+//#define RE_LOG_DEBUG_ENABLE
+#define RE_LOG_INSTANCE_NAME_C_STR "CDockAreaTitleBar"
+
+#include "NMLogger.h"
+
 namespace ads
 {
 
@@ -63,10 +69,13 @@ namespace ads
 struct DockAreaTitleBarPrivate
 {
 	CDockAreaTitleBar* _this;
+    QPointer<tTitleBarButton> GroupButton;
 	QPointer<tTitleBarButton> TabsMenuButton;
 	QPointer<tTitleBarButton> UndockButton;
 	QPointer<tTitleBarButton> CloseButton;
 	QBoxLayout* Layout;
+    QWidget *buttonsContainer = nullptr;
+    QBoxLayout* buttonsContainerLayout = nullptr;;
 	CDockAreaWidget* DockArea;
 	CDockAreaTabBar* TabBar;
 	bool MenuOutdated = true;
@@ -140,7 +149,28 @@ DockAreaTitleBarPrivate::DockAreaTitleBarPrivate(CDockAreaTitleBar* _public) :
 //============================================================================
 void DockAreaTitleBarPrivate::createButtons()
 {
-	QSizePolicy ButtonSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    QSizePolicy ButtonSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    QSize buttonSize(25, 25);
+
+    // using additional widget to amke possible to styling titlle buttons are
+    buttonsContainer = new QWidget;
+    buttonsContainer->setObjectName("buttonsContainer");
+    buttonsContainerLayout = new QBoxLayout(QBoxLayout::LeftToRight);
+    buttonsContainerLayout->setContentsMargins(0, 0, 0, 0);
+    buttonsContainer->setLayout(buttonsContainerLayout);
+    Layout->addWidget(buttonsContainer);
+
+    //Group button
+    GroupButton = new CTitleBarButton();
+    GroupButton->setObjectName("tabsGroupButton");
+    GroupButton->setAutoRaise(true);
+    GroupButton->setPopupMode(QToolButton::InstantPopup);
+    GroupButton->setText("+");
+    //GroupButton->setSizePolicy(ButtonSizePolicy);
+    GroupButton->setFixedSize(buttonSize);
+    buttonsContainerLayout->addWidget(GroupButton, 0);
+
+    buttonsContainerLayout->addStretch();
 
 	// Tabs menu button
 	TabsMenuButton = new CTitleBarButton(testConfigFlag(CDockManager::DockAreaHasTabsMenuButton));
@@ -155,8 +185,9 @@ void DockAreaTitleBarPrivate::createButtons()
 	_this->connect(TabsMenu, SIGNAL(aboutToShow()), SLOT(onTabsMenuAboutToShow()));
 	TabsMenuButton->setMenu(TabsMenu);
 	internal::setToolTip(TabsMenuButton, QObject::tr("List All Tabs"));
-	TabsMenuButton->setSizePolicy(ButtonSizePolicy);
-	Layout->addWidget(TabsMenuButton, 0);
+    //TabsMenuButton->setSizePolicy(ButtonSizePolicy);
+    TabsMenuButton->setFixedSize(buttonSize);
+    buttonsContainerLayout->addWidget(TabsMenuButton, 0);
 	_this->connect(TabsMenuButton->menu(), SIGNAL(triggered(QAction*)),
 		SLOT(onTabsMenuActionTriggered(QAction*)));
 
@@ -165,8 +196,9 @@ void DockAreaTitleBarPrivate::createButtons()
 	UndockButton->setObjectName("undockButton");
 	UndockButton->setAutoRaise(true);
 	internal::setToolTip(UndockButton, QObject::tr("Detach Group"));
-	UndockButton->setSizePolicy(ButtonSizePolicy);
-	Layout->addWidget(UndockButton, 0);
+    //UndockButton->setSizePolicy(ButtonSizePolicy);
+    UndockButton->setFixedSize(buttonSize);
+    buttonsContainerLayout->addWidget(UndockButton, 0);
 	_this->connect(UndockButton, SIGNAL(clicked()), SLOT(onUndockButtonClicked()));
 
 	// Close button
@@ -181,9 +213,10 @@ void DockAreaTitleBarPrivate::createButtons()
 	{
 		internal::setToolTip(CloseButton, QObject::tr("Close Group"));
 	}
-	CloseButton->setSizePolicy(ButtonSizePolicy);
+    //CloseButton->setSizePolicy(ButtonSizePolicy);
+    CloseButton->setFixedSize(buttonSize);
 	CloseButton->setIconSize(QSize(16, 16));
-	Layout->addWidget(CloseButton, 0);
+    buttonsContainerLayout->addWidget(CloseButton, 0);
 	_this->connect(CloseButton, SIGNAL(clicked()), SLOT(onCloseButtonClicked()));
 }
 
@@ -258,13 +291,13 @@ CDockAreaTitleBar::CDockAreaTitleBar(CDockAreaWidget* parent) :
 
 	setObjectName("dockAreaTitleBar");
 	d->Layout = new QBoxLayout(QBoxLayout::LeftToRight);
-	d->Layout->setContentsMargins(0, 0, 0, 0);
-	d->Layout->setSpacing(0);
+    d->Layout->setContentsMargins(0, 0, 0, 0);
+    d->Layout->setSpacing(0);
 	setLayout(d->Layout);
 	setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    setFixedHeight(25);
 
 	d->createTabBar();
-	d->Layout->addWidget(new CSpacerWidget(this));
 	d->createButtons();
 }
 
@@ -272,6 +305,10 @@ CDockAreaTitleBar::CDockAreaTitleBar(CDockAreaWidget* parent) :
 //============================================================================
 CDockAreaTitleBar::~CDockAreaTitleBar()
 {
+    if (!d->GroupButton.isNull())
+    {
+        delete d->GroupButton;
+    }
 	if (!d->CloseButton.isNull())
 	{
 		delete d->CloseButton;
@@ -350,7 +387,7 @@ void CDockAreaTitleBar::onTabsMenuAboutToShow()
 //============================================================================
 void CDockAreaTitleBar::onCloseButtonClicked()
 {
-    ADS_PRINT("CDockAreaTitleBar::onCloseButtonClicked");
+    RE_LOG_DEBUG("CDockAreaTitleBar::onCloseButtonClicked");
 	if (d->testConfigFlag(CDockManager::DockAreaCloseButtonClosesTab))
 	{
 		d->TabBar->closeTab(d->TabBar->currentIndex());
@@ -389,7 +426,7 @@ void CDockAreaTitleBar::updateDockWidgetActionsButtons()
 	{
 		for (auto Button : d->DockWidgetActionsButtons)
 		{
-			d->Layout->removeWidget(Button);
+            d->buttonsContainerLayout->removeWidget(Button);
 			delete Button;
 		}
 		d->DockWidgetActionsButtons.clear();
@@ -409,7 +446,7 @@ void CDockAreaTitleBar::updateDockWidgetActionsButtons()
 		Button->setAutoRaise(true);
 		Button->setPopupMode(QToolButton::InstantPopup);
 		Button->setObjectName(Action->objectName());
-		d->Layout->insertWidget(InsertIndex++, Button, 0);
+        d->buttonsContainerLayout->insertWidget(InsertIndex++, Button, 0);
 		d->DockWidgetActionsButtons.append(Button);
 	}
 }
@@ -451,7 +488,23 @@ QAbstractButton* CDockAreaTitleBar::button(TitleBarButton which) const
 void CDockAreaTitleBar::setVisible(bool Visible)
 {
 	Super::setVisible(Visible);
-	markTabsMenuOutdated();
+    markTabsMenuOutdated();
+}
+
+void CDockAreaTitleBar::setGroupMenu(QMenu *menu)
+{
+    if (d->GroupButton) {
+        auto oldMenu = d->GroupButton->menu();
+        if (oldMenu) {
+            auto list = oldMenu->actions();
+            qDeleteAll(list);
+            oldMenu->deleteLater();
+        }
+        QMenu *newMenu = new QMenu(d->GroupButton);
+        newMenu->addActions(menu->actions());
+        d->GroupButton->setMenu(newMenu);
+        menu->deleteLater();
+    }
 }
 
 
@@ -474,7 +527,7 @@ void CDockAreaTitleBar::mouseReleaseEvent(QMouseEvent* ev)
 {
 	if (ev->button() == Qt::LeftButton)
 	{
-        ADS_PRINT("CDockAreaTitleBar::mouseReleaseEvent");
+        RE_LOG_DEBUG("CDockAreaTitleBar::mouseReleaseEvent");
 		ev->accept();
 		auto CurrentDragState = d->DragState;
 		d->DragStartMousePos = QPoint();
@@ -529,7 +582,7 @@ void CDockAreaTitleBar::mouseMoveEvent(QMouseEvent* ev)
 	int DragDistance = (d->DragStartMousePos - ev->pos()).manhattanLength();
 	if (DragDistance >= CDockManager::startDragDistance())
 	{
-        ADS_PRINT("CDockAreaTitlBar::startFloating");
+        RE_LOG_DEBUG("CDockAreaTitlBar::startFloating");
 		d->startFloating(d->DragStartMousePos);
 		auto Overlay = d->DockArea->dockManager()->containerOverlay();
 		Overlay->setAllowedAreas(OuterDockAreas);
@@ -581,14 +634,14 @@ void CDockAreaTitleBar::contextMenuEvent(QContextMenuEvent* ev)
 //============================================================================
 void CDockAreaTitleBar::insertWidget(int index, QWidget *widget)
 {
-	d->Layout->insertWidget(index, widget);
+    d->buttonsContainerLayout->insertWidget(index, widget);
 }
 
 
 //============================================================================
 int CDockAreaTitleBar::indexOf(QWidget *widget) const
 {
-	return d->Layout->indexOf(widget);
+    return d->buttonsContainerLayout->indexOf(widget);
 }
 
 //============================================================================

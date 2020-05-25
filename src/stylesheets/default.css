@@ -11,7 +11,12 @@ ads--CDockContainerWidget
 
 ads--CDockAreaWidget
 {
-    background: palette(window);
+    background: #2e2e2e;
+}
+
+ads--CDockAreaTabBar #tabsContainerWidget
+{
+    background: #2e2e2e;
 }
 
 ads--CDockAreaWidget #tabsMenuButton::menu-indicator
@@ -19,16 +24,53 @@ ads--CDockAreaWidget #tabsMenuButton::menu-indicator
     image: none;
 }
 
+ads--CDockAreaWidget #tabsGroupButton
+{
+    border: none;
+    margin-left: 1px;
+    margin-bottom: 1px;
+}
+
+ads--CDockAreaWidget #tabsGroupButton::menu-indicator
+{
+    image: none;
+}
+
+ads--CDockAreaWidget #tabsGroupButton:hover
+{
+        background-color: rgb(60,60,60);
+        border: none;
+}
+
+ads--CDockAreaWidget #tabsGroupButton:pressed
+{
+        background: rgba(0, 0, 0, 32);
+        border: none;
+}
+
+ads--CDockAreaTitleBar
+{
+    background: #2e2e2e;
+}
+
+ads--CDockAreaTitleBar #buttonsContainer
+{
+    margin-left: 1px;
+    margin-bottom: 1px;
+    background: palette(window);
+}
+
 ads--CDockWidgetTab
 {
     background: palette(window);
-    padding: 0 0px;
+    margin-bottom: 1px;
     border: none;
 }
 
 ads--CDockWidgetTab[activeTab="true"]
 {
     background: palette(base);
+    margin-bottom: 0px;
 }
 
 ads--CDockWidgetTab QLabel
@@ -49,18 +91,18 @@ ads--CDockWidget
 
 ads--CTitleBarButton
 {
-	padding: 0px 0px;
+    padding: 0px 0px;
 }
 
 
 QScrollArea#dockWidgetScrollArea
 {
-	padding: 0px;
-	border: none;
+    padding: 0px;
+    border: none;
 }
 
 
-#tabCloseButton
+ads--CDockWidgetTab #tabCloseButton
 {
 	background: none;
 	border: none;
@@ -68,18 +110,17 @@ QScrollArea#dockWidgetScrollArea
         image: url(":/icons/resources/CloseWindowIcon.png");
 }
 
-#tabCloseButton:hover
+ads--CDockAreaWidget #tabCloseButton:hover
 {
-        background-color: rgb(60,60,60);
-        border: none;
+        background-color: rgb(60, 60, 60);
 }
 
-#tabCloseButton:pressed
+ads--CDockAreaWidget #tabCloseButton:pressed
 {
 	background: rgba(0, 0, 0, 32);
 }
 
-#undockButton
+ads--CDockAreaWidget #undockButton
 {
     background: none;
     border: none;
@@ -87,7 +128,7 @@ QScrollArea#dockWidgetScrollArea
     image: url(":/icons/resources/MinimizeWindowIcon.png");
 }
 
-#closeButton
+ads--CDockAreaWidget #closeButton
 {
     background: none;
     border: none;

@@ -185,7 +185,7 @@ void DockWidgetTabPrivate::createLayout()
 
 	CloseButton = createCloseButton();
 	CloseButton->setObjectName("tabCloseButton");
-	CloseButton->setFixedSize(22, 22);
+    CloseButton->setFixedSize(24, 24);
     CloseButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     _this->onDockWidgetFeaturesChanged();
 	internal::setToolTip(CloseButton, QObject::tr("Close Tab"));
