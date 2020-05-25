@@ -75,6 +75,11 @@ private slots:
 	 */
 	void reorderDockWidget(int fromIndex, int toIndex);
 
+    /**
+     * update menu of Group button
+     */
+    void updateGroupMenu();
+
 protected:
 	/**
 	 * Inserts a dock widget into dock area.

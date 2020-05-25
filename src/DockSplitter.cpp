@@ -62,7 +62,7 @@ CDockSplitter::CDockSplitter(Qt::Orientation orientation, QWidget *parent)
 	: QSplitter(orientation, parent),
 	  d(new DockSplitterPrivate(this))
 {
-
+    setHandleWidth(2);
 }
 
 //============================================================================

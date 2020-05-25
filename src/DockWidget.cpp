@@ -84,6 +84,7 @@ struct DockWidgetPrivate
 	bool IsFloatingTopLevel = false;
 	QList<QAction*> TitleBarActions;
 	CDockWidget::eMinimumSizeHintMode MinimumSizeHintMode = CDockWidget::MinimumSizeHintFromDockWidget;
+    QString GroupName;
 
 	/**
 	 * Private data constructor
@@ -312,7 +313,19 @@ QWidget* CDockWidget::takeWidget()
 //============================================================================
 QWidget* CDockWidget::widget() const
 {
-	return d->Widget;
+    return d->Widget;
+}
+
+//============================================================================
+void CDockWidget::setGroupName(const QString &group)
+{
+    d->GroupName = group;
+}
+
+//============================================================================
+QString CDockWidget::getGroupName() const
+{
+    return d->GroupName;
 }
 
 
