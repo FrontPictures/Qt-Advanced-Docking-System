@@ -473,6 +473,12 @@ signals:
     void dockAreaCreated(CDockAreaWidget* DockArea);
 
     /**
+     * This signal is emitted, if a new DockWidget added
+     * An DockAreaWidget use this signal to update group add menu
+     */
+    void dockWidgetAdded(CDockWidget* DockWidget);
+
+    /**
      * This signal is emitted just before the given dock widget is removed
      * from the
      */

@@ -57,6 +57,12 @@
 #include "DockComponentsFactory.h"
 #include "DockWidgetTab.h"
 
+#define RE_LOG_ENABLE
+//#define RE_LOG_DEBUG_ENABLE
+#define RE_LOG_INSTANCE_NAME_C_STR "DockAreaWidget"
+
+#include "NMLogger.h"
+
 
 namespace ads
 {
@@ -375,13 +381,20 @@ CDockAreaWidget::CDockAreaWidget(CDockManager* DockManager, CDockContainerWidget
 	if (d->DockManager)
 	{
 		emit d->DockManager->dockAreaCreated(this);
+        connect(d->DockManager, &CDockManager::dockWidgetAdded, this, [=](CDockWidget*){
+            updateGroupMenu();
+        });
+        connect(d->DockManager, &CDockManager::dockWidgetRemoved, this, [=](CDockWidget*){
+            updateGroupMenu();
+        });
+        updateGroupMenu();
 	}
 }
 
 //============================================================================
 CDockAreaWidget::~CDockAreaWidget()
 {
-    ADS_PRINT("~CDockAreaWidget()");
+    RE_LOG_DEBUG("~CDockAreaWidget()");
 	delete d->ContentsLayout;
 	delete d;
 }
@@ -405,6 +418,7 @@ CDockContainerWidget* CDockAreaWidget::dockContainer() const
 void CDockAreaWidget::addDockWidget(CDockWidget* DockWidget)
 {
 	insertDockWidget(d->ContentsLayout->count(), DockWidget);
+    updateGroupMenu();
 }
 
 
@@ -436,7 +450,7 @@ void CDockAreaWidget::insertDockWidget(int index, CDockWidget* DockWidget,
 //============================================================================
 void CDockAreaWidget::removeDockWidget(CDockWidget* DockWidget)
 {
-    ADS_PRINT("CDockAreaWidget::removeDockWidget");
+    RE_LOG_DEBUG("CDockAreaWidget::removeDockWidget");
 	auto NextOpenDockWidget = nextOpenDockWidget(DockWidget);
 
 	d->ContentsLayout->removeWidget(DockWidget);
@@ -450,7 +464,7 @@ void CDockAreaWidget::removeDockWidget(CDockWidget* DockWidget)
 	}
 	else if (d->ContentsLayout->isEmpty() && DockContainer->dockAreaCount() > 1)
 	{
-        ADS_PRINT("Dock Area empty");
+        RE_LOG_DEBUG("Dock Area empty");
 		DockContainer->removeDockArea(this);
 		this->deleteLater();
 	}
@@ -474,6 +488,7 @@ void CDockAreaWidget::removeDockWidget(CDockWidget* DockWidget)
 #if (ADS_DEBUG_LEVEL > 0)
 	DockContainer->dumpLayout();
 #endif
+    updateGroupMenu();
 }
 
 
@@ -514,7 +529,7 @@ void CDockAreaWidget::hideAreaWithNoVisibleContent()
 //============================================================================
 void CDockAreaWidget::onTabCloseRequested(int Index)
 {
-    ADS_PRINT("CDockAreaWidget::onTabCloseRequested " << Index);
+    RE_LOG_DEBUG("CDockAreaWidget::onTabCloseRequested " << Index);
     auto* DockWidget = dockWidget(Index);
     if (DockWidget->features().testFlag(CDockWidget::DockWidgetDeleteOnClose))
     {
@@ -571,7 +586,7 @@ void CDockAreaWidget::setCurrentIndex(int index)
 	auto TabBar = d->tabBar();
 	if (index < 0 || index > (TabBar->count() - 1))
 	{
-		qWarning() << Q_FUNC_INFO << "Invalid index" << index;
+        RE_LOG_ERROR("Invalid index: %i", index);
 		return;
     }
 
@@ -692,18 +707,59 @@ CDockWidget* CDockAreaWidget::dockWidget(int Index) const
 //============================================================================
 void CDockAreaWidget::reorderDockWidget(int fromIndex, int toIndex)
 {
-    ADS_PRINT("CDockAreaWidget::reorderDockWidget");
+    RE_LOG_DEBUG("CDockAreaWidget::reorderDockWidget");
 	if (fromIndex >= d->ContentsLayout->count() || fromIndex < 0
      || toIndex >= d->ContentsLayout->count() || toIndex < 0 || fromIndex == toIndex)
 	{
-        ADS_PRINT("Invalid index for tab movement" << fromIndex << toIndex);
+        RE_LOG_DEBUG("Invalid index for tab movement" << fromIndex << toIndex);
 		return;
 	}
 
 	auto Widget = d->ContentsLayout->widget(fromIndex);
 	d->ContentsLayout->removeWidget(Widget);
 	d->ContentsLayout->insertWidget(toIndex, Widget);
-	setCurrentIndex(toIndex);
+    setCurrentIndex(toIndex);
+}
+
+void CDockAreaWidget::updateGroupMenu()
+{
+    if (d->DockManager && d->TitleBar) {
+        QMenu *rootMenu = new QMenu();
+        std::map<QString, QList<QAction *>> subMenus;
+        const auto &widgetsList = d->DockManager->dockWidgetsMap();
+        const auto &ownList = dockWidgets();
+        // dont add widget which already tabbed and opened
+        // if widget tabbed but closed - opening it
+        for (const auto &w : widgetsList) {
+            QAction *action = nullptr;
+            if (ownList.contains(w)) {
+                if (w->isClosed()) {
+                    action = new QAction(w->windowTitle());
+                    connect(action, &QAction::triggered, this, [=]() { w->toggleView(true); });
+                } else {
+                    continue;
+                }
+            } else {
+                action = new QAction(w->windowTitle());
+                connect(action, &QAction::triggered, this, [=]() {
+                    d->DockManager->addDockWidgetTabToArea(w, this);
+                    w->toggleView(true);
+                });
+            }
+            const auto groupName = w->getGroupName();
+            if (!groupName.isEmpty()) {
+                subMenus[groupName] << action;
+            } else {
+                rootMenu->addAction(action);
+            }
+        }
+        for (const auto &sm : subMenus) {
+            auto subMenu = new QMenu(sm.first);
+            subMenu->addActions(sm.second);
+            rootMenu->addMenu(subMenu);
+        }
+        d->TitleBar->setGroupMenu(rootMenu);
+    }
 }
 
 
@@ -713,6 +769,7 @@ void CDockAreaWidget::toggleDockWidgetView(CDockWidget* DockWidget, bool Open)
 	Q_UNUSED(DockWidget);
 	Q_UNUSED(Open);
 	updateTitleBarVisibility();
+    updateGroupMenu();
 }
 
 
@@ -758,7 +815,7 @@ void CDockAreaWidget::saveState(QXmlStreamWriter& s) const
 	auto CurrentDockWidget = currentDockWidget();
 	QString Name = CurrentDockWidget ? CurrentDockWidget->objectName() : "";
 	s.writeAttribute("Current", Name);
-    ADS_PRINT("CDockAreaWidget::saveState TabCount: " << d->ContentsLayout->count()
+    RE_LOG_DEBUG("CDockAreaWidget::saveState TabCount: " << d->ContentsLayout->count()
             << " Current: " << Name);
 	for (int i = 0; i < d->ContentsLayout->count(); ++i)
 	{

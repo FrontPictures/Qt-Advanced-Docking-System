@@ -283,6 +283,16 @@ public:
     QWidget* widget() const;
 
     /**
+     * Set group name to widget. Layout system uses group names to organize group menu
+     */
+    void setGroupName(const QString &group);
+
+    /**
+     * Return group name
+     */
+    QString getGroupName() const;
+
+    /**
      * Returns the tab widget of this dock widget that is shown in the dock
      * area title bar
      */

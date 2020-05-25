@@ -425,6 +425,7 @@ CDockManager::CDockManager(QWidget *parent) :
 	CDockContainerWidget(this, parent),
 	d(new DockManagerPrivate(this))
 {
+    setContentsMargins(1, 0, 1, 0);
 	createRootSplitter();
 	QMainWindow* MainWindow = qobject_cast<QMainWindow*>(parent);
 	if (MainWindow)
@@ -606,6 +607,7 @@ CFloatingDockContainer* CDockManager::addDockWidgetFloating(CDockWidget* Dockwid
         Dockwidget->closeDockWidget();
         FloatingWidget->hide();
     }
+    emit dockWidgetAdded(Dockwidget);
 	return FloatingWidget;
 }
 
@@ -632,7 +634,9 @@ CDockAreaWidget* CDockManager::addDockWidget(DockWidgetArea area,
 	CDockWidget* Dockwidget, CDockAreaWidget* DockAreaWidget)
 {
 	d->DockWidgetsMap.insert(Dockwidget->objectName(), Dockwidget);
-	return CDockContainerWidget::addDockWidget(area, Dockwidget, DockAreaWidget);
+    auto w = CDockContainerWidget::addDockWidget(area, Dockwidget, DockAreaWidget);
+    emit dockWidgetAdded(Dockwidget);
+    return w;
 }
 
 

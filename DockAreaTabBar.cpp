@@ -134,7 +134,7 @@ CDockAreaTabBar::CDockAreaTabBar(CDockAreaWidget* parent) :
 	d->TabsContainerWidget->setObjectName("tabsContainerWidget");
 	d->TabsLayout = new QBoxLayout(QBoxLayout::LeftToRight);
 	d->TabsLayout->setContentsMargins(0, 0, 0, 0);
-	d->TabsLayout->setSpacing(0);
+    d->TabsLayout->setSpacing(1);
 	d->TabsLayout->addStretch(1);
 	d->TabsContainerWidget->setLayout(d->TabsLayout);
 	setWidget(d->TabsContainerWidget);
