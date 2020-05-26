@@ -51,6 +51,12 @@
 #include <functional>
 #include <iostream>
 
+#define RE_LOG_ENABLE
+#define RE_LOG_DEBUG_ENABLE
+#define RE_LOG_INSTANCE_NAME_C_STR "DockContainerWidget"
+
+#include "NMLogger.h"
+
 #if QT_VERSION < 0x050900
 
 inline char toHexLower(uint value)
@@ -1226,6 +1232,7 @@ void CDockContainerWidget::removeDockWidget(CDockWidget* Dockwidget)
 	if (Area)
 	{
 		Area->removeDockWidget(Dockwidget);
+        Dockwidget->setDockArea(nullptr);
 	}
 }
 
@@ -1418,6 +1425,7 @@ void CDockContainerWidget::dropFloatingWidget(CFloatingDockContainer* FloatingWi
 
 	if (DockArea)
 	{
+        RE_LOG_DEBUG("DockArea");
 		auto dropOverlay = d->DockManager->dockAreaOverlay();
 		dropOverlay->setAllowedAreas(DockArea->allowedAreas());
 		dropArea = dropOverlay->showOverlay(DockArea);
@@ -1439,7 +1447,7 @@ void CDockContainerWidget::dropFloatingWidget(CFloatingDockContainer* FloatingWi
 	if (InvalidDockWidgetArea == dropArea)
 	{
 		dropArea = ContainerDropArea;
-        ADS_PRINT("Container Drop Content: " << dropArea);
+        RE_LOG_DEBUG("Container Drop Content: %i", dropArea);
 		if (dropArea != InvalidDockWidgetArea)
 		{
 			d->dropIntoContainer(FloatingWidget, dropArea);

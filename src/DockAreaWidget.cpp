@@ -529,7 +529,7 @@ void CDockAreaWidget::hideAreaWithNoVisibleContent()
 //============================================================================
 void CDockAreaWidget::onTabCloseRequested(int Index)
 {
-    RE_LOG_DEBUG("CDockAreaWidget::onTabCloseRequested " << Index);
+    RE_LOG_DEBUG("CDockAreaWidget::onTabCloseRequested: %i", Index);
     auto* DockWidget = dockWidget(Index);
     if (DockWidget->features().testFlag(CDockWidget::DockWidgetDeleteOnClose))
     {
@@ -711,7 +711,7 @@ void CDockAreaWidget::reorderDockWidget(int fromIndex, int toIndex)
 	if (fromIndex >= d->ContentsLayout->count() || fromIndex < 0
      || toIndex >= d->ContentsLayout->count() || toIndex < 0 || fromIndex == toIndex)
 	{
-        RE_LOG_DEBUG("Invalid index for tab movement" << fromIndex << toIndex);
+        RE_LOG_DEBUG("Invalid index for tab movement %i %i", fromIndex, toIndex);
 		return;
 	}
 
@@ -791,8 +791,12 @@ void CDockAreaWidget::updateTitleBarVisibility()
 	{
 		bool Hidden = Container->hasTopLevelDockWidget() && (Container->isFloating()
 			|| CDockManager::configFlags().testFlag(CDockManager::HideSingleCentralWidgetTitleBar));
-		d->TitleBar->setVisible(!Hidden);
-	}
+        RE_LOG_DEBUG("Hiden: %i", Hidden);
+        d->TitleBar->setVisible(!Hidden);
+        if (!Hidden && d->TitleBar->tabBar()->currentTab()) {
+            d->TitleBar->tabBar()->currentTab()->show();
+        }
+    }
 }
 
 
@@ -815,8 +819,7 @@ void CDockAreaWidget::saveState(QXmlStreamWriter& s) const
 	auto CurrentDockWidget = currentDockWidget();
 	QString Name = CurrentDockWidget ? CurrentDockWidget->objectName() : "";
 	s.writeAttribute("Current", Name);
-    RE_LOG_DEBUG("CDockAreaWidget::saveState TabCount: " << d->ContentsLayout->count()
-            << " Current: " << Name);
+    RE_LOG_DEBUG("CDockAreaWidget::saveState TabCount: %i Current: %s", d->ContentsLayout->count(), qcstr(Name));
 	for (int i = 0; i < d->ContentsLayout->count(); ++i)
 	{
 		dockWidget(i)->saveState(s);
