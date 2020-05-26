@@ -53,6 +53,12 @@
 
 #include <iostream>
 
+#define RE_LOG_ENABLE
+//#define RE_LOG_DEBUG_ENABLE
+#define RE_LOG_INSTANCE_NAME_C_STR "DockWidgetTab"
+
+#include "NMLogger.h"
+
 namespace ads
 {
 
@@ -258,6 +264,16 @@ bool DockWidgetTabPrivate::startFloating(eDragState DraggingState)
 		FloatingWidget = createFloatingWidget(DockArea, OpaqueUndocking);
 		Size = DockArea->size();
 	}
+
+    // If uninitialized widget going to floating state it DockArea has invalid size
+    // because show event doesn't apears yet
+    // so we need to set valid size
+    if (DockWidget->size().width() > Size.width()) {
+        Size.setWidth(DockWidget->size().width());
+    }
+    if (DockWidget->size().height() > Size.height()) {
+        Size.setHeight(DockWidget->size().height());
+    }
 
     if (DraggingFloatingWidget == DraggingState)
     {
