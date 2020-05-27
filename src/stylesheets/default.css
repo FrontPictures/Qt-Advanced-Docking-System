@@ -86,7 +86,12 @@ ads--CDockWidgetTab[activeTab="true"] QLabel
 ads--CDockWidget
 {
     background: palette(light);
-    border: none;
+    border: 1px solid palette(window);
+}
+
+ads--CDockWidget[selected="true"]
+{
+    border: 1px solid palette(highlight);
 }
 
 ads--CTitleBarButton

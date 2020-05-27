@@ -277,6 +277,12 @@ signals:
 	 * toggleView() function
 	 */
 	void dockAreaViewToggled(CDockAreaWidget* DockArea, bool Open);
+
+    /**
+     * This signal is emitted if in any dock areas current widget was changed
+     */
+    void currentDockWidgetChanged(CDockWidget *currentWidget);
+
 }; // class DockContainerWidget
 } // namespace ads
 //-----------------------------------------------------------------------------

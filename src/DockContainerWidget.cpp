@@ -52,7 +52,7 @@
 #include <iostream>
 
 #define RE_LOG_ENABLE
-#define RE_LOG_DEBUG_ENABLE
+//#define RE_LOG_DEBUG_ENABLE
 #define RE_LOG_INSTANCE_NAME_C_STR "DockContainerWidget"
 
 #include "NMLogger.h"
@@ -729,7 +729,7 @@ void DockContainerWidgetPrivate::addDockAreasToList(const QList<CDockAreaWidget*
 	for (auto DockArea : NewDockAreas)
 	{
 		DockArea->titleBarButton(TitleBarButtonUndock)->setVisible(true);
-		DockArea->titleBarButton(TitleBarButtonClose)->setVisible(true);
+        DockArea->titleBarButton(TitleBarButtonClose)->setVisible(true);
 	}
 
 	// We need to ensure, that the dock area title bar is visible. The title bar
@@ -758,6 +758,13 @@ void DockContainerWidgetPrivate::appendDockAreas(const QList<CDockAreaWidget*> N
 			&CDockAreaWidget::viewToggled,
 			_this,
 			std::bind(&DockContainerWidgetPrivate::onDockAreaViewToggled, this, std::placeholders::_1));
+        QObject::connect(DockArea, &CDockAreaWidget::currentChanged, _this, [=](int) {
+            RE_LOG_DEBUG("Current changed in dock area");
+            auto currentWidget = DockArea->currentDockWidget();
+            if (currentWidget) {
+                emit _this->currentDockWidgetChanged(currentWidget);
+            }
+        });
 	}
 }
 
@@ -1217,11 +1224,11 @@ CDockAreaWidget* CDockContainerWidget::addDockWidget(DockWidgetArea area, CDockW
 	Dockwidget->setDockManager(d->DockManager);
 	if (DockAreaWidget)
 	{
-		return d->dockWidgetIntoDockArea(area, Dockwidget, DockAreaWidget);
+        return d->dockWidgetIntoDockArea(area, Dockwidget, DockAreaWidget);
 	}
 	else
 	{
-		return d->dockWidgetIntoContainer(area, Dockwidget);
+        return d->dockWidgetIntoContainer(area, Dockwidget);
 	}
 }
 
