@@ -495,7 +495,10 @@ void CDockAreaTitleBar::setGroupMenu(QMenu *menu)
 {
     if (d->GroupButton) {
         auto oldMenu = d->GroupButton->menu();
+        bool needOpen = false;
         if (oldMenu) {
+            needOpen = oldMenu->isVisible();
+            oldMenu->close();
             auto list = oldMenu->actions();
             qDeleteAll(list);
             oldMenu->deleteLater();
@@ -504,6 +507,9 @@ void CDockAreaTitleBar::setGroupMenu(QMenu *menu)
         newMenu->addActions(menu->actions());
         d->GroupButton->setMenu(newMenu);
         menu->deleteLater();
+        if (needOpen) {
+            d->GroupButton->showMenu();
+        }
     }
 }
 
