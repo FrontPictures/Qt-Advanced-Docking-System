@@ -10,6 +10,8 @@ set(sources_tmp
     DockComponentsFactory.h
     DockContainerWidget.cpp
     DockContainerWidget.h
+    DockGroupMenu.cpp
+    DockGroupMenu.h
     DockManager.cpp
     DockManager.h
     DockOverlay.cpp

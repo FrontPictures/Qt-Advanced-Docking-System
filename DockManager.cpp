@@ -53,6 +53,7 @@
 #include "DockAreaWidget.h"
 #include "IconProvider.h"
 #include "DockingStateReader.h"
+#include "DockGroupMenu.h"
 
 
 /**
@@ -88,6 +89,7 @@ struct DockManagerPrivate
 	QMap<QString, QByteArray> Perspectives;
 	QMap<QString, QMenu*> ViewMenuGroups;
 	QMenu* ViewMenu;
+    CDockGroupMenu *GroupMenu = nullptr;
 	CDockManager::eViewMenuInsertionOrder MenuInsertionOrder = CDockManager::MenuAlphabeticallySorted;
 	bool RestoringState = false;
 	QVector<CFloatingDockContainer*> UninitializedFloatingWidgets;
@@ -434,6 +436,7 @@ CDockManager::CDockManager(QWidget *parent) :
 	}
 
 	d->ViewMenu = new QMenu(tr("Show View"), this);
+    d->GroupMenu = new CDockGroupMenu(this);
 	d->DockAreaOverlay = new CDockOverlay(this, CDockOverlay::ModeDockAreaOverlay);
 	d->ContainerOverlay = new CDockOverlay(this, CDockOverlay::ModeContainerOverlay);
 	d->Containers.append(this);
@@ -680,12 +683,17 @@ void CDockManager::removeDockWidget(CDockWidget* Dockwidget)
 	emit dockWidgetAboutToBeRemoved(Dockwidget);
 	d->DockWidgetsMap.remove(Dockwidget->objectName());
 	CDockContainerWidget::removeDockWidget(Dockwidget);
+    d->GroupMenu->removeWidget(Dockwidget);
     emit dockWidgetRemoved(Dockwidget);
 }
 
 //============================================================================
 void CDockManager::renameDockWidget(CDockWidget *Dockwidget, const QString &name)
 {
+    auto oldName = Dockwidget->windowTitle();
+    if (oldName == name) {
+        return;
+    }
     CDockWidget *widget = nullptr;
     for (auto it = d->DockWidgetsMap.begin(); it != d->DockWidgetsMap.end(); ++it) {
         if (it.value() == Dockwidget) {
@@ -698,6 +706,8 @@ void CDockManager::renameDockWidget(CDockWidget *Dockwidget, const QString &name
         Dockwidget->renameDockWidget(name);
         d->DockWidgetsMap[Dockwidget->objectName()] = Dockwidget;
     }
+    d->GroupMenu->renameAction(Dockwidget->getGroupName(), oldName, name);
+    emit dockWidgetRenamed(Dockwidget);
 }
 
 //============================================================================
@@ -838,7 +848,12 @@ QAction* CDockManager::addToggleViewActionToMenu(QAction* ToggleViewAction,
 //============================================================================
 QMenu* CDockManager::viewMenu() const
 {
-	return d->ViewMenu;
+    return d->ViewMenu;
+}
+
+CDockGroupMenu *CDockManager::groupMenu()
+{
+    return d->GroupMenu;
 }
 
 
