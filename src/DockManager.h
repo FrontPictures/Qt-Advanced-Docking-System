@@ -53,6 +53,7 @@ struct DockWidgetTabPrivate;
 struct DockAreaWidgetPrivate;
 class CIconProvider;
 class CDockComponentsFactory;
+class CDockGroupMenu;
 
 /**
  * The central dock manager that maintains the complete docking system.
@@ -389,6 +390,11 @@ public:
 	 */
 	QMenu* viewMenu() const;
 
+    /**
+     * Return object which handles group menu
+     */
+    CDockGroupMenu *groupMenu();
+
 	/**
 	 * Define the insertion order for toggle view menu items.
 	 * The order defines how the actions are added to the view menu.
@@ -477,6 +483,12 @@ signals:
      * An DockAreaWidget use this signal to update group add menu
      */
     void dockWidgetAdded(CDockWidget* DockWidget);
+
+    /**
+     * This signal is emitted, if a DockWidget renamed
+     * An DockAreaWidget use this signal to update group add menu
+     */
+    void dockWidgetRenamed(CDockWidget* DockWidget);
 
     /**
      * This signal is emitted just before the given dock widget is removed
