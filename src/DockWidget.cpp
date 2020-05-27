@@ -58,6 +58,12 @@
 #include "DockComponentsFactory.h"
 #include "ads_globals.h"
 
+#define RE_LOG_ENABLE
+//#define RE_LOG_DEBUG_ENABLE
+#define RE_LOG_INSTANCE_NAME_C_STR "DockWidget"
+
+#include "NMLogger.h"
+
 
 namespace ads
 {
@@ -85,6 +91,7 @@ struct DockWidgetPrivate
 	QList<QAction*> TitleBarActions;
 	CDockWidget::eMinimumSizeHintMode MinimumSizeHintMode = CDockWidget::MinimumSizeHintFromDockWidget;
     QString GroupName;
+    bool Selected = false;
 
 	/**
 	 * Private data constructor
@@ -224,7 +231,7 @@ CDockWidget::CDockWidget(const QString &title, QWidget *parent) :
 	d(new DockWidgetPrivate(this))
 {
 	d->Layout = new QBoxLayout(QBoxLayout::TopToBottom);
-	d->Layout->setContentsMargins(0, 0, 0, 0);
+    d->Layout->setContentsMargins(0, 0, 0, 0);
 	d->Layout->setSpacing(0);
 	setLayout(d->Layout);
 	setWindowTitle(title);
@@ -314,6 +321,21 @@ QWidget* CDockWidget::takeWidget()
 QWidget* CDockWidget::widget() const
 {
     return d->Widget;
+}
+
+//============================================================================
+void CDockWidget::setSelected(bool state)
+{
+    d->Selected = state;
+    style()->unpolish(this);
+    style()->polish(this);
+    emit selectionChanged();
+}
+
+//============================================================================
+bool CDockWidget::isSelected() const
+{
+    return d->Selected;
 }
 
 //============================================================================
