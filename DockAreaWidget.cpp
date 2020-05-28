@@ -803,9 +803,6 @@ void CDockAreaWidget::updateTitleBarVisibility()
 			|| CDockManager::configFlags().testFlag(CDockManager::HideSingleCentralWidgetTitleBar));
         RE_LOG_DEBUG("Hiden: %i", Hidden);
         d->TitleBar->setVisible(!Hidden);
-        if (!Hidden && d->TitleBar->tabBar()->currentTab()) {
-            d->TitleBar->tabBar()->currentTab()->show();
-        }
     }
 }
 
