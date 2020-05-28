@@ -140,9 +140,16 @@ void DockWidgetPrivate::showDockWidget()
 {
 	if (!DockArea)
 	{
+        RE_LOG_DEBUG("No dock area");
 		CFloatingDockContainer* FloatingWidget = new CFloatingDockContainer(_this);
 		FloatingWidget->resize(_this->size());
 		FloatingWidget->show();
+        if(DockArea) {
+            RE_LOG_DEBUG("open dock area");
+            DockArea->setCurrentDockWidget(_this);
+            DockArea->toggleView(true);
+            TabWidget->show();
+        }
 	}
 	else
 	{
@@ -305,10 +312,10 @@ QWidget* CDockWidget::takeWidget()
 	}
 	else if (d->Widget)
 	{
-		d->Layout->removeWidget(d->Widget);
-		w = d->Widget;
-		d->Widget = nullptr;
+        d->Layout->removeWidget(d->Widget);
+        w = d->Widget;
 	}
+    d->Widget = nullptr;
 
 	if (w)
 	{
