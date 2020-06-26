@@ -75,7 +75,7 @@ struct DockAreaTitleBarPrivate
 	QPointer<tTitleBarButton> CloseButton;
 	QBoxLayout* Layout;
     QWidget *buttonsContainer = nullptr;
-    QBoxLayout* buttonsContainerLayout = nullptr;;
+    QBoxLayout* buttonsContainerLayout = nullptr;
 	CDockAreaWidget* DockArea;
 	CDockAreaTabBar* TabBar;
 	bool MenuOutdated = true;
