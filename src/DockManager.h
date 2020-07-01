@@ -503,6 +503,13 @@ signals:
      * docking system but it is not deleted yet.
      */
     void dockWidgetRemoved(CDockWidget* DockWidget);
+
+    /**
+     * This signal is emitted if a any dock widgets changed visibility or section
+     * if splitters sizes changed by user
+     * if any areas removed, added, changed visibility
+     */
+    void layoutChanged();
 }; // class DockManager
 } // namespace ads
 //-----------------------------------------------------------------------------
