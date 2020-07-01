@@ -503,6 +503,7 @@ CDockManager::CDockManager(QWidget *parent) :
     connect(this, &CDockContainerWidget::currentDockWidgetChanged, [=](CDockWidget *currentWidget) {
         d->setSelected(currentWidget);
     });
+    connect(this, &CDockContainerWidget::splitterMoved, this, &CDockManager::layoutChanged);
 }
 
 //============================================================================

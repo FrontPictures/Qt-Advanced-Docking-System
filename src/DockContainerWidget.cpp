@@ -291,12 +291,14 @@ public:
 	{
 		onVisibleDockAreaCountChanged();
 		emit _this->dockAreasRemoved();
+        RE_LOG_DEBUG("dockAreasRemoved");
 	}
 
 	void emitDockAreasAdded()
 	{
 		onVisibleDockAreaCountChanged();
 		emit _this->dockAreasAdded();
+        RE_LOG_DEBUG("dockAreasAdded");
 	}
 
 	/**
@@ -307,6 +309,9 @@ public:
 		CDockSplitter* s = new CDockSplitter(orientation, parent);
 		s->setOpaqueResize(CDockManager::configFlags().testFlag(CDockManager::OpaqueSplitterResize));
 		s->setChildrenCollapsible(false);
+        QObject::connect(s, &CDockSplitter::splitterMoved, [=](int, int){
+            emit _this->splitterMoved();
+        });
 		return s;
 	}
 
@@ -318,6 +323,7 @@ public:
 		VisibleDockAreaCount += Visible ? 1 : -1;
 		onVisibleDockAreaCountChanged();
 		emit _this->dockAreaViewToggled(DockArea, Visible);
+        RE_LOG_DEBUG("dockAreaViewToggled %i", Visible);
 	}
 }; // struct DockContainerWidgetPrivate
 
@@ -1432,7 +1438,6 @@ void CDockContainerWidget::dropFloatingWidget(CFloatingDockContainer* FloatingWi
 
 	if (DockArea)
 	{
-        RE_LOG_DEBUG("DockArea");
 		auto dropOverlay = d->DockManager->dockAreaOverlay();
 		dropOverlay->setAllowedAreas(DockArea->allowedAreas());
 		dropArea = dropOverlay->showOverlay(DockArea);
@@ -1454,7 +1459,6 @@ void CDockContainerWidget::dropFloatingWidget(CFloatingDockContainer* FloatingWi
 	if (InvalidDockWidgetArea == dropArea)
 	{
 		dropArea = ContainerDropArea;
-        RE_LOG_DEBUG("Container Drop Content: %i", dropArea);
 		if (dropArea != InvalidDockWidgetArea)
 		{
 			d->dropIntoContainer(FloatingWidget, dropArea);

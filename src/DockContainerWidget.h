@@ -283,6 +283,11 @@ signals:
      */
     void currentDockWidgetChanged(CDockWidget *currentWidget);
 
+    /**
+     * This signal is emitted if in any splitter moved by user
+     */
+    void splitterMoved();
+
 }; // class DockContainerWidget
 } // namespace ads
 //-----------------------------------------------------------------------------
