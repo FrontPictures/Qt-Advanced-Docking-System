@@ -247,7 +247,7 @@ bool DockManagerPrivate::restoreStateFromXml(const QByteArray &state,  int versi
     }
     CDockingStateReader s(state);
     s.readNextStartElement();
-    if (s.name() != "QtAdvancedDockingSystem")
+    if (s.name() != "AdvancedDockingSystem")
     {
     	return false;
     }
@@ -504,6 +504,10 @@ CDockManager::CDockManager(QWidget *parent) :
         d->setSelected(currentWidget);
     });
     connect(this, &CDockContainerWidget::splitterMoved, this, &CDockManager::layoutChanged);
+    connect(this, &CDockContainerWidget::dockAreasAdded, this, &CDockManager::layoutChanged);
+    connect(this, &CDockContainerWidget::dockAreaViewToggled, [=](CDockAreaWidget *, bool){
+        emit layoutChanged();
+    });
 }
 
 //============================================================================
@@ -597,7 +601,7 @@ QByteArray CDockManager::saveState(int version) const
     auto ConfigFlags = CDockManager::configFlags();
 	s.setAutoFormatting(ConfigFlags.testFlag(XmlAutoFormattingEnabled));
     s.writeStartDocument();
-		s.writeStartElement("QtAdvancedDockingSystem");
+        s.writeStartElement("AdvancedDockingSystem");
 		s.writeAttribute("Version", QString::number(version));
 		s.writeAttribute("Containers", QString::number(d->Containers.count()));
 		for (auto Container : d->Containers)
