@@ -544,6 +544,10 @@ void CDockManager::removeFloatingWidget(CFloatingDockContainer* FloatingWidget)
 //============================================================================
 void CDockManager::registerDockContainer(CDockContainerWidget* DockContainer)
 {
+    connect(DockContainer, &CDockContainerWidget::dockAreasAdded, this, &CDockManager::layoutChanged);
+    connect(DockContainer, &CDockContainerWidget::dockAreaViewToggled, [=](CDockAreaWidget *, bool){
+        emit layoutChanged();
+    });
 	d->Containers.append(DockContainer);
 }
 
