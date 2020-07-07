@@ -537,9 +537,6 @@ CDockManager::CDockManager(QWidget *parent) :
     });
     connect(this, &CDockContainerWidget::splitterMoved, this, &CDockManager::layoutChanged);
     connect(this, &CDockContainerWidget::dockAreasAdded, this, &CDockManager::layoutChanged);
-    connect(this, &CDockContainerWidget::dockAreaViewToggled, [=](CDockAreaWidget *, bool){
-        emit layoutChanged();
-    });
 
 	if (CDockManager::testConfigFlag(CDockManager::FocusHighlighting))
 	{
@@ -582,9 +579,6 @@ void CDockManager::removeFloatingWidget(CFloatingDockContainer* FloatingWidget)
 void CDockManager::registerDockContainer(CDockContainerWidget* DockContainer)
 {
     connect(DockContainer, &CDockContainerWidget::dockAreasAdded, this, &CDockManager::layoutChanged);
-    connect(DockContainer, &CDockContainerWidget::dockAreaViewToggled, [=](CDockAreaWidget *, bool){
-        emit layoutChanged();
-    });
 	d->Containers.append(DockContainer);
 }
 
@@ -699,6 +693,9 @@ bool CDockManager::restoreState(const QByteArray &state, int version)
 CFloatingDockContainer* CDockManager::addDockWidgetFloating(CDockWidget* Dockwidget, bool hide)
 {
 	d->DockWidgetsMap.insert(Dockwidget->objectName(), Dockwidget);
+    connect(Dockwidget, &CDockWidget::viewToggled, [=](bool){
+        emit layoutChanged();
+    });
 	CDockAreaWidget* OldDockArea = Dockwidget->dockAreaWidget();
 	if (OldDockArea)
 	{
@@ -751,6 +748,9 @@ CDockAreaWidget* CDockManager::addDockWidget(DockWidgetArea area,
 	CDockWidget* Dockwidget, CDockAreaWidget* DockAreaWidget)
 {
 	d->DockWidgetsMap.insert(Dockwidget->objectName(), Dockwidget);
+    connect(Dockwidget, &CDockWidget::viewToggled, [=](bool){
+        emit layoutChanged();
+    });
     auto w = CDockContainerWidget::addDockWidget(area, Dockwidget, DockAreaWidget);
     emit dockWidgetAdded(Dockwidget);
     return w;
