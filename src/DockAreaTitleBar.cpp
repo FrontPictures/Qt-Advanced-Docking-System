@@ -112,10 +112,11 @@ struct DockAreaTitleBarPrivate
 
 	/**
 	 * Returns true if the given config flag is set
+	 * Convenience function to ease config flag testing
 	 */
 	static bool testConfigFlag(CDockManager::eConfigFlag Flag)
 	{
-		return CDockManager::configFlags().testFlag(Flag);
+		return CDockManager::testConfigFlag(Flag);
 	}
 
 	/**
@@ -193,7 +194,7 @@ void DockAreaTitleBarPrivate::createButtons()
 
 	// Undock button
 	UndockButton = new CTitleBarButton(testConfigFlag(CDockManager::DockAreaHasUndockButton));
-	UndockButton->setObjectName("undockButton");
+	UndockButton->setObjectName("detachGroupButton");
 	UndockButton->setAutoRaise(true);
 	internal::setToolTip(UndockButton, QObject::tr("Detach Group"));
     //UndockButton->setSizePolicy(ButtonSizePolicy);
@@ -203,7 +204,7 @@ void DockAreaTitleBarPrivate::createButtons()
 
 	// Close button
 	CloseButton = new CTitleBarButton(testConfigFlag(CDockManager::DockAreaHasCloseButton));
-	CloseButton->setObjectName("closeButton");
+	CloseButton->setObjectName("dockAreaCloseButton");
 	CloseButton->setAutoRaise(true);
 	if (testConfigFlag(CDockManager::DockAreaCloseButtonClosesTab))
 	{
@@ -243,7 +244,7 @@ IFloatingWidget* DockAreaTitleBarPrivate::makeAreaFloating(const QPoint& Offset,
 {
 	QSize Size = DockArea->size();
 	this->DragState = DragState;
-	bool OpaqueUndocking = CDockManager::configFlags().testFlag(CDockManager::OpaqueUndocking) ||
+	bool OpaqueUndocking = CDockManager::testConfigFlag(CDockManager::OpaqueUndocking) ||
 		(DraggingFloatingWidget != DragState);
 	CFloatingDockContainer* FloatingDockContainer = nullptr;
 	IFloatingWidget* FloatingWidget;
@@ -522,6 +523,11 @@ void CDockAreaTitleBar::mousePressEvent(QMouseEvent* ev)
 		ev->accept();
 		d->DragStartMousePos = ev->pos();
 		d->DragState = DraggingMousePressed;
+
+		if (CDockManager::testConfigFlag(CDockManager::FocusHighlighting))
+		{
+			d->TabBar->currentTab()->setFocus(Qt::OtherFocusReason);
+		}
 		return;
 	}
 	Super::mousePressEvent(ev);
@@ -542,6 +548,7 @@ void CDockAreaTitleBar::mouseReleaseEvent(QMouseEvent* ev)
 		{
 			d->FloatingWidget->finishDragging();
 		}
+
 		return;
 	}
 	Super::mouseReleaseEvent(ev);
@@ -627,12 +634,12 @@ void CDockAreaTitleBar::contextMenuEvent(QContextMenuEvent* ev)
 	}
 
 	QMenu Menu(this);
-	auto Action = Menu.addAction(tr("Detach Area"), this, SLOT(onUndockButtonClicked()));
+	auto Action = Menu.addAction(tr("Detach Group"), this, SLOT(onUndockButtonClicked()));
 	Action->setEnabled(d->DockArea->features().testFlag(CDockWidget::DockWidgetFloatable));
 	Menu.addSeparator();
-	Action = Menu.addAction(tr("Close Area"), this, SLOT(onCloseButtonClicked()));
+	Action = Menu.addAction(tr("Close Group"), this, SLOT(onCloseButtonClicked()));
 	Action->setEnabled(d->DockArea->features().testFlag(CDockWidget::DockWidgetClosable));
-	Menu.addAction(tr("Close Other Areas"), d->DockArea, SLOT(closeOtherAreas()));
+	Menu.addAction(tr("Close Other Groups"), d->DockArea, SLOT(closeOtherAreas()));
 	Menu.exec(ev->globalPos());
 }
 
@@ -651,9 +658,10 @@ int CDockAreaTitleBar::indexOf(QWidget *widget) const
 }
 
 //============================================================================
-CTitleBarButton::CTitleBarButton(bool visible /*= true*/, QWidget* parent /*= nullptr*/) : tTitleBarButton(parent),
-Visible(visible),
-HideWhenDisabled(DockAreaTitleBarPrivate::testConfigFlag(CDockManager::DockAreaHideDisabledButtons))
+CTitleBarButton::CTitleBarButton(bool visible, QWidget* parent)
+	: tTitleBarButton(parent),
+	  Visible(visible),
+	  HideWhenDisabled(CDockManager::testConfigFlag(CDockManager::DockAreaHideDisabledButtons))
 {
 
 }

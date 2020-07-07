@@ -143,6 +143,7 @@ void DockWidgetPrivate::showDockWidget()
         RE_LOG_DEBUG("No dock area");
 		CFloatingDockContainer* FloatingWidget = new CFloatingDockContainer(_this);
 		FloatingWidget->resize(_this->size());
+		TabWidget->show();
 		FloatingWidget->show();
         if(DockArea) {
             RE_LOG_DEBUG("open dock area");
@@ -251,6 +252,11 @@ CDockWidget::CDockWidget(const QString &title, QWidget *parent) :
 		SLOT(toggleView(bool)));
 	setToolbarFloatingStyle(false);
     setFocusPolicy(Qt::ClickFocus);
+
+	if (CDockManager::testConfigFlag(CDockManager::FocusHighlighting))
+	{
+		setFocusPolicy(Qt::ClickFocus);
+	}
 }
 
 //============================================================================
@@ -309,6 +315,7 @@ QWidget* CDockWidget::takeWidget()
 		w = d->ScrollArea->takeWidget();
 		delete d->ScrollArea;
 		d->ScrollArea = nullptr;
+		d->Widget = nullptr;
 	}
 	else if (d->Widget)
 	{

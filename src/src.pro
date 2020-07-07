@@ -45,7 +45,8 @@ HEADERS += \
     DockAreaTitleBar.h \
     ElidingLabel.h \
     IconProvider.h \
-    DockComponentsFactory.h 
+    DockComponentsFactory.h  \
+    DockFocusController.h
 
 
 SOURCES += \
@@ -64,7 +65,8 @@ SOURCES += \
     DockAreaTitleBar.cpp \
     ElidingLabel.cpp \
     IconProvider.cpp \
-    DockComponentsFactory.cpp
+    DockComponentsFactory.cpp \
+    DockFocusController.cpp
 
 
 unix {
@@ -73,7 +75,7 @@ SOURCES += linux/FloatingWidgetTitleBar.cpp
 }
 
 isEmpty(PREFIX){
-	PREFIX=..\installed
+	PREFIX=../installed
 	warning("Install Prefix not set")
 }
 headers.path=$$PREFIX/include

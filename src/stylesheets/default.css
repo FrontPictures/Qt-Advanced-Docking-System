@@ -1,7 +1,5 @@
-
 /*
  * Default style sheet on Windows Platforms
- * Note: Always use CSS-classes with and without "ads--" namespace to support Qt4 & Qt5
  */
 
 ads--CDockContainerWidget
@@ -19,9 +17,12 @@ ads--CDockAreaTabBar #tabsContainerWidget
     background: #2e2e2e;
 }
 
-ads--CDockAreaWidget #tabsMenuButton::menu-indicator
-{
-    image: none;
+ads--CDockWidgetTab {
+	background: palette(window);
+	border-color: palette(light);
+	border-style: solid;
+	border-width: 0 1px 0 0;
+	padding: 0 0px;
 }
 
 ads--CDockAreaWidget #tabsGroupButton
@@ -78,9 +79,11 @@ ads--CDockWidgetTab QLabel
     color: palette(foreground);
 }
 
-ads--CDockWidgetTab[activeTab="true"] QLabel
-{
-    color: palette(foreground);
+ads--CDockWidget {
+	background: palette(light);
+	border-color: palette(light);
+	border-style: solid;
+	border-width: 1px 0 0 0;
 }
 
 ads--CDockWidget
@@ -99,9 +102,7 @@ ads--CTitleBarButton
     padding: 0px 0px;
 }
 
-
-QScrollArea#dockWidgetScrollArea
-{
+QScrollArea#dockWidgetScrollArea {
     padding: 0px;
     border: none;
 }
@@ -113,6 +114,9 @@ ads--CDockWidgetTab #tabCloseButton
 	border: none;
         padding: 0px 0px;
         image: url(":/icons/resources/CloseWindowIcon.png");
+	qproperty-icon: url(:/ads/images/close-button.svg),
+		url(:/ads/images/close-button-disabled.svg) disabled;
+	qproperty-iconSize: 16px;
 }
 
 ads--CDockAreaWidget #tabCloseButton:hover
@@ -133,6 +137,10 @@ ads--CDockAreaWidget #undockButton
     image: url(":/icons/resources/MinimizeWindowIcon.png");
 }
 
+#tabsMenuButton::menu-indicator {
+	image: none;
+}
+
 ads--CDockAreaWidget #closeButton
 {
     background: none;
@@ -142,3 +150,19 @@ ads--CDockAreaWidget #closeButton
 }
 
 
+#tabsMenuButton {
+	qproperty-icon: url(:/ads/images/tabs-menu-button.svg);
+	qproperty-iconSize: 16px;
+}
+
+#dockAreaCloseButton {
+	qproperty-icon: url(:/ads/images/close-button.svg),
+		url(:/ads/images/close-button-disabled.svg) disabled;
+	qproperty-iconSize: 16px;
+}
+
+#detachGroupButton {
+	qproperty-icon: url(:/ads/images/detach-button.svg),
+		url(:/ads/images/detach-button-disabled.svg) disabled;
+	qproperty-iconSize: 16px;	
+}
