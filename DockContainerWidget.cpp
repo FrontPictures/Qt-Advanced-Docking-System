@@ -840,9 +840,8 @@ bool DockContainerWidgetPrivate::restoreSplitter(CDockingStateReader& s,
 	{
 		return false;
 	}
-    ADS_PRINT("Restore NodeSplitter Orientation: " <<  Orientation <<
-            " WidgetCount: " << WidgetCount);
-	QSplitter* Splitter = nullptr;
+    RE_LOG_DEBUG("Restore NodeSplitter Orientation: %s WidgetCount: %i", qcstr(OrientationStr), WidgetCount);
+    QSplitter* Splitter = nullptr;
 	if (!Testing)
 	{
 		Splitter = newSplitter(static_cast<Qt::Orientation>(Orientation));
@@ -936,8 +935,7 @@ bool DockContainerWidgetPrivate::restoreDockArea(CDockingStateReader& s,
 #endif
 
 	QString CurrentDockWidget = s.attributes().value("Current").toString();
-    ADS_PRINT("Restore NodeDockArea Tabs: " << Tabs << " Current: "
-            << CurrentDockWidget);
+    RE_LOG_DEBUG("Restore NodeDockArea Current: %s ", qcstr(CurrentDockWidget));
 
 	CDockAreaWidget* DockArea = nullptr;
 	if (!Testing)
@@ -1007,26 +1005,26 @@ bool DockContainerWidgetPrivate::restoreDockArea(CDockingStateReader& s,
 bool DockContainerWidgetPrivate::restoreChildNodes(CDockingStateReader& s,
 	QWidget*& CreatedWidget, bool Testing)
 {
-	bool Result = true;
+    bool Result = true;
 	while (s.readNextStartElement())
 	{
 		if (s.name() == "Splitter")
 		{
+            RE_LOG_DEBUG("Splitter");
 			Result = restoreSplitter(s, CreatedWidget, Testing);
-            ADS_PRINT("Splitter");
 		}
 		else if (s.name() == "Area")
 		{
+            RE_LOG_DEBUG("DockAreaWidget");
 			Result = restoreDockArea(s, CreatedWidget, Testing);
-            ADS_PRINT("DockAreaWidget");
 		}
 		else
 		{
+            RE_LOG_DEBUG("Unknown element");
 			s.skipCurrentElement();
-            ADS_PRINT("Unknown element");
 		}
 	}
-
+    RE_LOG_DEBUG("restoreChildNodes finished with result: %i", Result);
 	return Result;
 }
 
@@ -1524,7 +1522,8 @@ void CDockContainerWidget::saveState(QXmlStreamWriter& s) const
 
 	s.writeStartElement("Container");
 	s.writeAttribute("Floating", QString::number(isFloating() ? 1 : 0));
-	if (isFloating())
+    const bool saveGeometry = !CDockManager::testConfigFlag(CDockManager::NotSaveFloatingGeometry);
+    if (isFloating() && saveGeometry)
 	{
 		CFloatingDockContainer* FloatingWidget = floatingWidget();
 		QByteArray Geometry = FloatingWidget->saveGeometry();
@@ -1543,7 +1542,7 @@ void CDockContainerWidget::saveState(QXmlStreamWriter& s) const
 bool CDockContainerWidget::restoreState(CDockingStateReader& s, bool Testing)
 {
 	bool IsFloating = s.attributes().value("Floating").toInt();
-    ADS_PRINT("Restore CDockContainerWidget Floating" << IsFloating);
+    RE_LOG_DEBUG("Restore CDockContainerWidget Floating %i", IsFloating);
 
 	QWidget*NewRootSplitter {};
 	if (!Testing)
@@ -1555,28 +1554,34 @@ bool CDockContainerWidget::restoreState(CDockingStateReader& s, bool Testing)
 
 	if (IsFloating)
 	{
-        ADS_PRINT("Restore floating widget");
-		if (!s.readNextStartElement() || s.name() != "Geometry")
-		{
-			return false;
-		}
+        bool loadGeometry = !CDockManager::testConfigFlag(CDockManager::NotSaveFloatingGeometry);
+        if(loadGeometry) {
+            if (!s.readNextStartElement() || s.name() != "Geometry")
+            {
+                RE_LOG_ERROR("No xml geometry tag");
+                return false;
+            }
 
-		QByteArray GeometryString = s.readElementText(CDockingStateReader::ErrorOnUnexpectedElement).toLocal8Bit();
-		QByteArray Geometry = QByteArray::fromHex(GeometryString);
-		if (Geometry.isEmpty())
-		{
-			return false;
-		}
+            QByteArray GeometryString = s.readElementText(CDockingStateReader::ErrorOnUnexpectedElement).toLocal8Bit();
+            QByteArray Geometry = QByteArray::fromHex(GeometryString);
+            if (Geometry.isEmpty())
+            {
+                RE_LOG_ERROR("Geometry is empty");
+                return false;
+            }
 
-		if (!Testing)
-		{
-			CFloatingDockContainer* FloatingWidget = floatingWidget();
-			FloatingWidget->restoreGeometry(Geometry);
-		}
+            if (!Testing)
+            {
+                RE_LOG_ERROR("Restoring geometry");
+                CFloatingDockContainer* FloatingWidget = floatingWidget();
+                FloatingWidget->restoreGeometry(Geometry);
+            }
+        }
 	}
 
 	if (!d->restoreChildNodes(s, NewRootSplitter, Testing))
 	{
+        RE_LOG_ERROR("Unable restore child");
 		return false;
 	}
 

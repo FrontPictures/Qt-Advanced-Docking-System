@@ -116,10 +116,20 @@ struct DockManagerPrivate
 	 */
 	bool restoreStateFromXml(const QByteArray &state, int version, bool Testing = internal::Restore);
 
+    /**
+     * Restores geometry of floating containers
+     */
+    bool restoreFloatingGeometryFromXml(const QByteArray &state, bool Testing = internal::Restore);
+
 	/**
 	 * Restore state
 	 */
 	bool restoreState(const QByteArray &state, int version);
+
+    /**
+     * Restore geometry of floating containers
+     */
+    bool restoreFloatingGeometry(const QByteArray &state, int version);
 
 	void restoreDockWidgetsOpenState();
 	void restoreDockAreasIndices();
@@ -271,11 +281,11 @@ bool DockManagerPrivate::restoreStateFromXml(const QByteArray &state,  int versi
     	if (s.name() == "Container")
     	{
     		Result = restoreContainer(DockContainerCount, s, Testing);
-			if (!Result)
+            if (!Result)
 			{
-				break;
+                break;
 			}
-			DockContainerCount++;
+            DockContainerCount++;
     	}
     }
 
@@ -289,6 +299,56 @@ bool DockManagerPrivate::restoreStateFromXml(const QByteArray &state,  int versi
 			FloatingWidgets[FloatingWidgetIndex + i]->deleteLater();
 			_this->removeDockContainer(FloatingWidgets[FloatingWidgetIndex + i]->dockContainer());
 		}
+    }
+
+    return Result;
+}
+
+//============================================================================
+bool DockManagerPrivate::restoreFloatingGeometryFromXml(const QByteArray &state,  bool Testing)
+{
+    if (state.isEmpty())
+    {
+        return false;
+    }
+    CDockingStateReader s(state);
+    s.readNextStartElement();
+    if (s.name() != "ads-floating")
+    {
+        return false;
+    }
+    ADS_PRINT(s.attributes().value("Version"));
+    bool ok;
+    int v = s.attributes().value("Version").toInt(&ok);
+    if (!ok || v > CurrentVersion)
+    {
+        return false;
+    }
+
+    s.setFileVersion(v);
+    bool Result = true;
+    std::map<QString, QByteArray> floatingGeo;
+    while (s.readNextStartElement())
+    {
+        if (s.name() == "FloatingContainer")
+        {
+            auto title = s.attributes().value("Title").toString();
+            if (!s.readNextStartElement() || s.name() != "Geometry")
+            {
+                RE_LOG_ERROR("No xml geometry tag");
+                return false;
+            }
+            QByteArray GeometryString = s.readElementText(CDockingStateReader::ErrorOnUnexpectedElement).toLocal8Bit();
+            floatingGeo[title] = QByteArray::fromHex(GeometryString);
+            s.skipCurrentElement();
+        }
+    }
+
+    for (auto fw : FloatingWidgets) {
+        auto it = floatingGeo.find(fw->windowTitle());
+        if (it != floatingGeo.end()) {
+            fw->restoreGeometry(it->second);
+        }
     }
 
     return Result;
@@ -406,6 +466,20 @@ bool DockManagerPrivate::restoreState(const QByteArray& State, int version)
     restoreDockWidgetsOpenState();
     restoreDockAreasIndices();
     emitTopLevelEvents();
+
+    return true;
+}
+
+//============================================================================
+bool DockManagerPrivate::restoreFloatingGeometry(const QByteArray& State, int version)
+{
+    QByteArray state = State.startsWith("<?xml") ? State : qUncompress(State);
+
+    if (!restoreFloatingGeometryFromXml(state, version))
+    {
+        RE_LOG_ERROR("restoreState: Error restoring state!!!!!!!");
+        return false;
+    }
 
     return true;
 }
@@ -648,7 +722,74 @@ bool CDockManager::restoreState(const QByteArray &state, int version)
 		show();
 	}
 
-	return Result;
+    return Result;
+}
+
+//============================================================================
+QByteArray CDockManager::saveFloatingGeometry(int version) const
+{
+    QByteArray xmldata;
+    QXmlStreamWriter s(&xmldata);
+    auto ConfigFlags = CDockManager::configFlags();
+    s.setAutoFormatting(ConfigFlags.testFlag(XmlAutoFormattingEnabled));
+    s.writeStartDocument();
+    s.writeStartElement("ads-floating");
+    s.writeAttribute("Version", QString::number(version));
+    s.writeAttribute("Containers", QString::number(d->FloatingWidgets.count()));
+    for (auto Floating : d->FloatingWidgets)
+    {
+        if(!Floating->geometry().isEmpty()) {
+            s.writeStartElement("FloatingContainer");
+            s.writeAttribute("Title", Floating->windowTitle());
+            QByteArray Geometry = Floating->saveGeometry();
+            s.writeTextElement("Geometry", Geometry.toHex(' '));
+            s.writeEndElement();
+        }
+    }
+
+    s.writeEndElement();
+    s.writeEndDocument();
+
+    return ConfigFlags.testFlag(XmlCompressionEnabled)
+            ? qCompress(xmldata, 9) : xmldata;
+}
+
+//============================================================================
+bool CDockManager::restoreFloatingGeometry(const QByteArray &state, int version)
+{
+    // Prevent multiple calls as long as state is not restore. This may
+    // happen, if QApplication::processEvents() is called somewhere
+    if (d->RestoringState)
+    {
+        RE_LOG_DEBUG("Still restoring");
+        return false;
+    }
+    RE_LOG_DEBUG("Restore floating geo from: %s", state.toStdString().c_str());
+
+    // We hide the complete dock manager here. Restoring the state means
+    // that DockWidgets are removed from the DockArea internal stack layout
+    // which in turn  means, that each time a widget is removed the stack
+    // will show and raise the next available widget which in turn
+    // triggers show events for the dock widgets. To avoid this we hide the
+    // dock manager. Because there will be no processing of application
+    // events until this function is finished, the user will not see this
+    // hiding
+    bool IsHidden = this->isHidden();
+    if (!IsHidden)
+    {
+        hide();
+    }
+    d->RestoringState = true;
+    emit restoringState();
+    bool Result = d->restoreFloatingGeometry(state, version);
+    d->RestoringState = false;
+    emit stateRestored();
+    if (!IsHidden)
+    {
+        show();
+    }
+
+    return Result;
 }
 
 

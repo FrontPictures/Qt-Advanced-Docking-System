@@ -161,8 +161,8 @@ public:
 		FloatingContainerHasWidgetTitle = 0x40000, //!< If set, the Floating Widget window title reflects the title of the current dock widget otherwise it displays application name as window title
 		FloatingContainerHasWidgetIcon = 0x80000, //!< If set, the Floating Widget icon reflects the icon of the current dock widget otherwise it displays application icon
 		HideSingleCentralWidgetTitleBar = 0x100000, //!< If there is only one single visible dock widget in the main dock container (the dock manager) and if this flag is set, then the titlebar of this dock widget will be hidden
-		                                            //!< this only makes sense for non draggable and non floatable widgets and enables the creation of some kind of "central" widget
-
+                                                    //!< this only makes sense for non draggable and non floatable widgets and enables the creation of some kind of "central" widget
+        NotSaveFloatingGeometry = 0x200000, //!< If this flag set managed doesn't save geometry of floating containers in saveState function, but saveFloatingGeometry will save geometry anywhere
 
         DefaultDockAreaButtons = DockAreaHasCloseButton
 							   | DockAreaHasUndockButton
@@ -326,6 +326,24 @@ public:
 	 * returns true.
 	 */
 	bool restoreState(const QByteArray &state, int version = Version1);
+
+    /**
+     * Saves the current geometry of floating containers into the returned QByteArray.
+     * The XmlMode enables / disables the auto formatting for the XmlStreamWriter.
+     * If auto formatting is enabled, the output is intended and line wrapped.
+     * The XmlMode XmlAutoFormattingDisabled is better if you would like to have
+     * a more compact XML output - i.e. for storage in ini files.
+     */
+    QByteArray saveFloatingGeometry(int version = Version1) const;
+
+    /**
+     * Restores the geometry of floating widgets
+     * The version number is compared with that stored in state. If they do
+     * not match, the dockmanager's state is left unchanged, and this function
+     * returns false; otherwise, the state is restored, and this function
+     * returns true.
+     */
+    bool restoreFloatingGeometry(const QByteArray &state, int version = Version1);
 
 	/**
 	 * Saves the current perspective to the internal list of perspectives.
