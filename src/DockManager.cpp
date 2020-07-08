@@ -62,7 +62,7 @@
 #endif
 
 #define RE_LOG_ENABLE
-#define RE_LOG_DEBUG_ENABLE
+//#define RE_LOG_DEBUG_ENABLE
 #define RE_LOG_INSTANCE_NAME_C_STR "DockManager"
 
 #include "NMLogger.h"
