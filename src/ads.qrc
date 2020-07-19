@@ -2,5 +2,11 @@
     <qresource prefix="/ads">
         <file>stylesheets/default.css</file>
         <file>stylesheets/default_linux.css</file>
+        <file>images/close-button-focused.svg</file>
+        <file>stylesheets/focus_highlighting.css</file>
+        <file>stylesheets/focus_highlighting_linux.css</file>
+        <file>images/tabs-menu-button.svg</file>
+        <file>images/detach-button.svg</file>
+        <file>images/detach-button-disabled.svg</file>
     </qresource>
 </RCC>
