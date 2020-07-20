@@ -958,6 +958,18 @@ void CDockManager::renameDockWidget(CDockWidget *Dockwidget, const QString &name
         }
     }
     if (widget) {
+        // rename title of floating window if widget placed in it
+        // and title equal to old name
+        if (widget->isInFloatingContainer()) {
+            auto container = widget->dockContainer();
+            if (container != nullptr && container->isFloating()) {
+                auto floatingContainer = container->floatingWidget();
+                if (floatingContainer->windowTitle() == widget->windowTitle()) {
+                    floatingContainer->setWindowTitle(name);
+                }
+            }
+        }
+
         d->DockWidgetsMap.remove(Dockwidget->objectName());
         Dockwidget->renameDockWidget(name);
         d->DockWidgetsMap[Dockwidget->objectName()] = Dockwidget;
