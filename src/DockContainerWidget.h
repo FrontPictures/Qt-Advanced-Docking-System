@@ -276,7 +276,7 @@ signals:
 	 * This signal is emitted if a dock area is opened or closed via
 	 * toggleView() function
 	 */
-	void dockAreaViewToggled(CDockAreaWidget* DockArea, bool Open);
+	void dockAreaViewToggled(ads::CDockAreaWidget* DockArea, bool Open);
 
     /**
      * This signal is emitted if in any dock areas current widget was changed
