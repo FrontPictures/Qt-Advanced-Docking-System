@@ -54,7 +54,6 @@ class CFloatingDockContainer;
 class ADS_EXPORT CDockWidget : public QFrame
 {
     Q_OBJECT
-    Q_PROPERTY(bool selected READ isSelected WRITE setSelected NOTIFY selectionChanged)
 private:
     DockWidgetPrivate* d; ///< private data (pimpl)
     friend struct DockWidgetPrivate;
@@ -283,17 +282,6 @@ public:
      * the widget has not been set.
      */
     QWidget* widget() const;
-
-    /**
-     * Set widget selected
-     * Selected widget can be tyled in stylesheet
-     */
-    void setSelected(bool state);
-
-    /**
-     * Return true if widget selected
-     */
-    bool isSelected() const;
 
     /**
      * Set group name to widget. Layout system uses group names to organize group menu
@@ -605,11 +593,6 @@ signals:
      * The features parameter gives the new value of the property.
      */
     void featuresChanged(ads::CDockWidget::DockWidgetFeatures features);
-
-    /**
-     * This signal is emitted when the selected property changes
-     */
-    void selectionChanged();
 }; // class DockWidget
 }
  // namespace ads

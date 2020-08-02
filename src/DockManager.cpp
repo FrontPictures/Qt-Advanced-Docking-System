@@ -183,17 +183,6 @@ struct DockManagerPrivate
 	 * Adds action to menu - optionally in sorted order
 	 */
 	void addActionToMenu(QAction* Action, QMenu* Menu, bool InsertSorted);
-
-    /**
-     * Find CDockWidget parent of given child widget
-     * Retunr nullptr if given widget is not a child of CDockWidget or is not a CDockWidget
-     */
-    CDockWidget *findDockWidget(QWidget *target);
-
-    /**
-     * Set widget selected if it belongs to this manager
-     */
-    void setSelected(CDockWidget *);
 };
 // struct DockManagerPrivate
 
@@ -212,7 +201,7 @@ void DockManagerPrivate::loadStylesheet()
 	QString Result;
 	QString FileName = ":ads/stylesheets/";
 	FileName += CDockManager::testConfigFlag(CDockManager::FocusHighlighting)
-		? "focus_highlighting" : "default";
+        ? "focus_highlighting_graphite" : "default";
 #ifdef Q_OS_LINUX
     FileName += "_linux";
 #endif
@@ -545,36 +534,6 @@ void DockManagerPrivate::addActionToMenu(QAction* Action, QMenu* Menu, bool Inse
 }
 
 //============================================================================
-CDockWidget *DockManagerPrivate::findDockWidget(QWidget *target)
-{
-    QWidget *candidate = target;
-    CDockWidget *dockW = nullptr;
-    while (candidate != nullptr) {
-        if ((dockW = dynamic_cast<CDockWidget *>(candidate)) != nullptr) {
-            return dockW;
-        }
-
-        candidate = candidate->parentWidget();
-    }
-
-    return nullptr;
-}
-
-//============================================================================
-void DockManagerPrivate::setSelected(CDockWidget *widget)
-{
-    if (DockWidgetsMap.contains(widget->objectName())) {
-        for (const auto &w : DockWidgetsMap) {
-            w->setSelected(false);
-        }
-        RE_LOG_DEBUG("In focus: %s", qcstr(widget->objectName()));
-        widget->setSelected(true);
-        //_this->update();
-    }
-}
-
-
-//============================================================================
 CDockManager::CDockManager(QWidget *parent) :
 	CDockContainerWidget(this, parent),
 	d(new DockManagerPrivate(this))
@@ -594,21 +553,6 @@ CDockManager::CDockManager(QWidget *parent) :
 	d->Containers.append(this);
 	d->loadStylesheet();
 
-    //Since QEvents are propagated to child widgets first, they accept them and we cant know
-    //whether any of MwpWidgets should get selected. So, we catch global focus change event
-    //and iterate through focused widgets parents to see if it is one of MwpWidgets.
-    //If such widget found, we can 'select' it
-    connect(qApp, &QApplication::focusChanged, this, [this](QWidget *old, QWidget *now) {
-        (void)old;
-        auto dock = d->findDockWidget(now);
-        if (dock != nullptr) {
-            d->setSelected(dock);
-        }
-    });
-
-    connect(this, &CDockContainerWidget::currentDockWidgetChanged, [=](CDockWidget *currentWidget) {
-        d->setSelected(currentWidget);
-    });
     connect(this, &CDockContainerWidget::splitterMoved, this, &CDockManager::layoutChanged);
     connect(this, &CDockContainerWidget::dockAreasAdded, this, &CDockManager::layoutChanged);
 
@@ -634,9 +578,6 @@ CDockManager::~CDockManager()
 void CDockManager::registerFloatingWidget(CFloatingDockContainer* FloatingWidget)
 {
 	d->FloatingWidgets.append(FloatingWidget);
-    connect(FloatingWidget->dockContainer(), &CDockContainerWidget::currentDockWidgetChanged, [=](CDockWidget *currentWidget) {
-        d->setSelected(currentWidget);
-    });
     emit floatingWidgetCreated(FloatingWidget);
     ADS_PRINT("d->FloatingWidgets.count() " << d->FloatingWidgets.count());
 }
@@ -860,9 +801,6 @@ CFloatingDockContainer* CDockManager::addDockWidgetFloating(CDockWidget* Dockwid
         FloatingWidget->hide();
     }
     emit dockWidgetAdded(Dockwidget);
-    connect(FloatingWidget->dockContainer(), &CDockContainerWidget::currentDockWidgetChanged, [=](CDockWidget *currentWidget) {
-        d->setSelected(currentWidget);
-    });
     return FloatingWidget;
 }
 
@@ -1188,6 +1126,8 @@ void CDockManager::notifyWidgetOrAreaRelocation(QWidget* DroppedWidget)
 	{
 		d->FocusController->notifyWidgetOrAreaRelocation(DroppedWidget);
 	}
+
+    emit layoutChanged();
 }
 
 
