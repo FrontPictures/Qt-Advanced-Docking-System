@@ -300,6 +300,8 @@ CDockAreaTitleBar::CDockAreaTitleBar(CDockAreaWidget* parent) :
 
 	d->createTabBar();
 	d->createButtons();
+
+    setFocusPolicy(Qt::NoFocus);
 }
 
 
@@ -663,7 +665,7 @@ CTitleBarButton::CTitleBarButton(bool visible, QWidget* parent)
 	  Visible(visible),
 	  HideWhenDisabled(CDockManager::testConfigFlag(CDockManager::DockAreaHideDisabledButtons))
 {
-
+    setFocusPolicy(Qt::NoFocus);
 }
 
 //============================================================================

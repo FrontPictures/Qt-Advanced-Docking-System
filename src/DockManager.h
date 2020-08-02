@@ -533,14 +533,14 @@ signals:
 	 * An application can use this signal to e.g. subscribe to events of
 	 * the newly created window.
 	 */
-	void floatingWidgetCreated(CFloatingDockContainer* FloatingWidget);
+	void floatingWidgetCreated(ads::CFloatingDockContainer* FloatingWidget);
 
     /**
      * This signal is emitted, if a new DockArea has been created.
      * An application can use this signal to set custom icons or custom
      * tooltips for the DockArea buttons.
      */
-    void dockAreaCreated(CDockAreaWidget* DockArea);
+    void dockAreaCreated(ads::CDockAreaWidget* DockArea);
 
     /**
      * This signal is emitted, if a new DockWidget added
@@ -558,7 +558,7 @@ signals:
      * This signal is emitted just before the given dock widget is removed
      * from the
      */
-    void dockWidgetAboutToBeRemoved(CDockWidget* DockWidget);
+    void dockWidgetAboutToBeRemoved(ads::CDockWidget* DockWidget);
 
     /**
      * This signal is emitted if a dock widget has been removed with the remove
@@ -566,7 +566,7 @@ signals:
      * If this signal is emitted, the dock widget has been removed from the
      * docking system but it is not deleted yet.
      */
-    void dockWidgetRemoved(CDockWidget* DockWidget);
+    void dockWidgetRemoved(ads::CDockWidget* DockWidget);
 
     /**
      * This signal is emitted if a any dock widgets changed visibility or section
@@ -580,7 +580,7 @@ signals:
      * Both old and now can be nullptr.
      * The focused dock widget is the one that is highlighted in the GUI
      */
-    void focusedDockWidgetChanged(CDockWidget* old, CDockWidget* now);
+    void focusedDockWidgetChanged(ads::CDockWidget* old, ads::CDockWidget* now);
 }; // class DockManager
 } // namespace ads
 //-----------------------------------------------------------------------------

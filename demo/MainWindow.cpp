@@ -399,6 +399,9 @@ void MainWindowPrivate::createContent()
 	// Test custom factory - we inject a help button into the title bar
 	ads::CDockComponentsFactory::setFactory(new CCustomComponentsFactory());
 	auto TopDockArea = DockManager->addDockWidget(ads::TopDockWidgetArea, FileSystemWidget);
+	// Uncomment the next line if you would like to test the
+	// setHideSingleWidgetTitleBar() functionality
+	// TopDockArea->setHideSingleWidgetTitleBar(true);
 	ads::CDockComponentsFactory::resetDefaultFactory();
 
 	// We create a calendar widget and clear all flags to prevent the dock area
@@ -595,7 +598,7 @@ CMainWindow::CMainWindow(QWidget *parent) :
 
 	// uncomment the following line to enable focus highlighting of the dock
 	// widget that has the focus
-	// CDockManager::setConfigFlag(CDockManager::FocusHighlighting, true);
+	CDockManager::setConfigFlag(CDockManager::FocusHighlighting, true);
 
 	// uncomment if you would like to enable an equal distribution of the
 	// available size of a splitter to all contained dock widgets
@@ -631,6 +634,9 @@ CMainWindow::~CMainWindow()
 void CMainWindow::closeEvent(QCloseEvent* event)
 {
 	d->saveState();
+    // Delete dock manager here to delete all floating widgets. This ensures
+    // that all top level windows of the dock manager are properly closed
+    d->DockManager->deleteLater();
 	QMainWindow::closeEvent(event);
 }
 
