@@ -91,7 +91,6 @@ struct DockWidgetPrivate
 	QList<QAction*> TitleBarActions;
 	CDockWidget::eMinimumSizeHintMode MinimumSizeHintMode = CDockWidget::MinimumSizeHintFromDockWidget;
     QString GroupName;
-    bool Selected = false;
 
 	/**
 	 * Private data constructor
@@ -336,21 +335,6 @@ QWidget* CDockWidget::takeWidget()
 QWidget* CDockWidget::widget() const
 {
     return d->Widget;
-}
-
-//============================================================================
-void CDockWidget::setSelected(bool state)
-{
-    d->Selected = state;
-    style()->unpolish(this);
-    style()->polish(this);
-    emit selectionChanged();
-}
-
-//============================================================================
-bool CDockWidget::isSelected() const
-{
-    return d->Selected;
 }
 
 //============================================================================

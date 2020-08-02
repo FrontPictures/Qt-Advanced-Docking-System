@@ -1,0 +1,149 @@
+/*
+ * Default style sheet on Windows Platforms with focus highlighting flag enabled
+ */
+ads--CDockContainerWidget {
+        background: #121212;
+}
+
+/* ==== CDockAreaWidget ==== */
+
+ads--CDockAreaWidget {
+        background: transparent;
+}
+
+ads--CDockAreaWidget #tabsGroupButton
+{
+    border: none;
+    margin-left: 1px;
+    margin-bottom: 1px;
+}
+
+ads--CDockAreaWidget #tabsGroupButton::menu-indicator
+{
+    image: none;
+}
+
+ads--CDockAreaWidget #tabsGroupButton:hover
+{
+        background-color: rgb(60,60,60);
+        border: none;
+}
+
+ads--CDockAreaWidget #tabsGroupButton:pressed
+{
+        background: rgba(0, 0, 0, 32);
+        border: none;
+}
+
+/* ========================= */
+
+
+/* ==== CDockWidgetTab ==== */
+ads--CDockWidgetTab {
+    background: palette(alternate-base);
+    margin-bottom: 1px;
+}
+
+ads--CDockWidgetTab[activeTab="true"] {
+    background: palette(window);
+    margin-bottom: 0px;
+}
+
+ads--CDockWidgetTab QLabel {
+        color: palette(foreground);
+}
+
+ads--CDockWidgetTab[activeTab="true"] QLabel {
+	color: palette(foreground);
+}
+
+/* Focus related styling */
+ads--CDockWidgetTab[focused="true"] {
+        background: palette(highlight);
+}
+
+ads--CDockWidgetTab[focused="true"]>#tabCloseButton {
+}
+
+ads--CDockWidgetTab[focused="true"]>#tabCloseButton:hover {
+        background: rgba(255, 255, 255, 48);
+}
+
+ads--CDockWidgetTab[focused="true"]>#tabCloseButton:pressed {
+        background: rgba(255, 255, 255, 92);
+}
+
+ads--CDockWidgetTab[focused="true"] QLabel {
+        color: palette(light);
+}
+/* ========================= */
+
+ads--CDockAreaTabBar #tabsContainerWidget
+{
+    background: #121212;
+}
+
+ads--CDockWidget {
+        background: palette(window);
+        border-top: 2px solid palette(window);
+}
+
+ads--CDockWidget[focused="true"] {
+        background: palette(window);
+        border-top: 2px solid palette(highlight);
+}
+
+ads--CTitleBarButton {
+	padding: 0px 0px;
+}
+
+QScrollArea#dockWidgetScrollArea {
+	padding: 0px;
+	border: none;
+}
+
+#tabsMenuButton::menu-indicator {
+	image: none;
+}
+
+#tabCloseButton {
+    background: none;
+    border: none;
+    padding: 0px 0px;
+    image: url(":/icons/resources/CloseWindowIcon.png");
+}
+
+#tabCloseButton:hover {
+    background-color: rgb(60, 60, 60);
+}
+
+#tabCloseButton:pressed {
+    background: rgba(0, 0, 0, 32);
+
+}
+
+#dockAreaCloseButton {
+    background: none;
+    border: none;
+    padding: 0px 0px;
+    image: url(":/icons/resources/CloseWindowIcon.png");
+}
+
+#detachGroupButton {
+    background: none;
+    border: none;
+    padding: 0px 0px;
+    image: url(":/icons/resources/MinimizeWindowIcon.png");
+}
+
+ads--CDockSplitter::handle {
+    background-color: transparent;
+    height: 2px;
+}
+
+ads--CDockAreaTitleBar #buttonsContainer
+{
+    margin-left: 1px;
+    margin-bottom: 1px;
+    background: palette(alternate-base);
+}
