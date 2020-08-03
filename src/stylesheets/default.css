@@ -4,17 +4,17 @@
 
 ads--CDockContainerWidget
 {
-    background: #2e2e2e;
+    background: #121212;
 }
 
 ads--CDockAreaWidget
 {
-    background: #2e2e2e;
+    background: #121212;
 }
 
 ads--CDockAreaTabBar #tabsContainerWidget
 {
-    background: #2e2e2e;
+    background: #121212;
 }
 
 ads--CDockWidgetTab {
@@ -51,26 +51,26 @@ ads--CDockAreaWidget #tabsGroupButton:pressed
 
 ads--CDockAreaTitleBar
 {
-    background: #2e2e2e;
+    background: #121212;
 }
 
 ads--CDockAreaTitleBar #buttonsContainer
 {
     margin-left: 1px;
     margin-bottom: 1px;
-    background: palette(window);
+    background: palette(alternate-base);
 }
 
 ads--CDockWidgetTab
 {
-    background: palette(window);
+    background: palette(alternate-base);
     margin-bottom: 1px;
     border: none;
 }
 
 ads--CDockWidgetTab[activeTab="true"]
 {
-    background: palette(base);
+    background: palette(window);
     margin-bottom: 0px;
 }
 
@@ -81,9 +81,9 @@ ads--CDockWidgetTab QLabel
 
 ads--CDockWidget {
 	background: palette(light);
-	border-color: palette(light);
-	border-style: solid;
-	border-width: 1px 0 0 0;
+        border-color: palette(light);
+        border-style: solid;
+        border-width: 1px 0 0 0;
 }
 
 ads--CDockWidget
