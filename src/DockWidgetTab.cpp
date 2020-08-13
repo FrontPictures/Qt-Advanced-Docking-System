@@ -199,15 +199,15 @@ void DockWidgetTabPrivate::createLayout()
 	_this->connect(CloseButton, SIGNAL(clicked()), SIGNAL(closeRequested()));
 
 	QFontMetrics fm(TitleLabel->font());
-	int Spacing = qRound(fm.height() / 4.0);
+    int Spacing = qRound(fm.height() / 2.0);
 
 	// Fill the layout
 	QBoxLayout* Layout = new QBoxLayout(QBoxLayout::LeftToRight);
-	Layout->setContentsMargins(2 * Spacing,0,0,0);
+    Layout->setContentsMargins(Spacing,0,0,0);
 	Layout->setSpacing(0);
 	_this->setLayout(Layout);
 	Layout->addWidget(TitleLabel, 1);
-	Layout->addSpacing(Spacing);
+    Layout->addSpacing(Spacing);
 	Layout->addWidget(CloseButton);
 	Layout->setAlignment(Qt::AlignCenter);
 

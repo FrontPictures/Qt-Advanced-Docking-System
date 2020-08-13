@@ -608,7 +608,7 @@ CFloatingDockContainer::CFloatingDockContainer(CDockManager *DockManager) :
     setWindowFlags(windowFlags() | Qt::Tool);
     QDockWidget::setWidget(d->DockContainer);
     QDockWidget::setFloating(true);
-    QDockWidget::setFeatures(QDockWidget::AllDockWidgetFeatures);
+    QDockWidget::setFeatures(DockWidgetClosable | DockWidgetMovable | DockWidgetFloatable);
     setTitleBarWidget(d->TitleBar);
     connect(d->TitleBar, SIGNAL(closeRequested()), SLOT(close()));
 #else
