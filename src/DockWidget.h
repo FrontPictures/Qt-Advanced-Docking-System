@@ -145,7 +145,7 @@ protected:
     /**
      * Rename dock widget (title, tab)
      */
-    void renameDockWidget(const QString &name);
+    void renameDockWidget(const QString &name, const QString &objectName);
 
 public:
     using Super = QFrame;

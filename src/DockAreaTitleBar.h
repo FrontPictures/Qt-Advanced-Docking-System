@@ -135,7 +135,7 @@ public:
      * set menu to Group button
      * clear old menu
      */
-    void setGroupMenu(QMenu *menu);
+    void setGroupMenu(QMenu *widgetsMenu);
 
 	/**
 	 * Inserts a custom widget at position index into this title bar.

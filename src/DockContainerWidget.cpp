@@ -142,7 +142,6 @@ public:
 	bool isFloating = false;
 	CDockAreaWidget* LastAddedAreaCache[5];
 	int VisibleDockAreaCount = -1;
-	CDockAreaWidget* TopLevelDockArea = nullptr;
 
 	/**
 	 * Private data constructor
@@ -309,7 +308,7 @@ public:
 		CDockSplitter* s = new CDockSplitter(orientation, parent);
 		s->setOpaqueResize(CDockManager::testConfigFlag(CDockManager::OpaqueSplitterResize));
 		s->setChildrenCollapsible(false);
-        QObject::connect(s, &CDockSplitter::splitterMoved, [=](int, int){
+        QObject::connect(s, &CDockSplitter::splitterMoved, _this, [=](int, int){
             emit _this->splitterMoved();
         });
 		return s;
@@ -401,15 +400,8 @@ void DockContainerWidgetPrivate::onVisibleDockAreaCountChanged()
 
 	if (TopLevelDockArea)
 	{
-		this->TopLevelDockArea = TopLevelDockArea;
 		TopLevelDockArea->titleBarButton(TitleBarButtonUndock)->setVisible(false || !_this->isFloating());
 		TopLevelDockArea->titleBarButton(TitleBarButtonClose)->setVisible(false || !_this->isFloating());
-	}
-	else if (this->TopLevelDockArea)
-	{
-		this->TopLevelDockArea->titleBarButton(TitleBarButtonUndock)->setVisible(true);
-		this->TopLevelDockArea->titleBarButton(TitleBarButtonClose)->setVisible(true);
-		this->TopLevelDockArea = nullptr;
 	}
 }
 
@@ -783,12 +775,12 @@ void DockContainerWidgetPrivate::appendDockAreas(const QList<CDockAreaWidget*> N
 			_this,
 			std::bind(&DockContainerWidgetPrivate::onDockAreaViewToggled, this, std::placeholders::_1));
         QObject::connect(DockArea, &CDockAreaWidget::currentChanged, _this, [=](int) {
-            RE_LOG_DEBUG("Current changed in dock area");
             auto currentWidget = DockArea->currentDockWidget();
             if (currentWidget) {
                 emit _this->currentDockWidgetChanged(currentWidget);
             }
         });
+        QObject::connect(DockArea, &CDockAreaWidget::widgetsReordered, _this, &CDockContainerWidget::dockWidgetsReordered);
 	}
 }
 
@@ -858,7 +850,7 @@ bool DockContainerWidgetPrivate::restoreSplitter(CDockingStateReader& s,
 	{
 		return false;
 	}
-    RE_LOG_DEBUG("Restore NodeSplitter Orientation: %s WidgetCount: %i", qcstr(OrientationStr), WidgetCount);
+    RE_LOG_DEBUG("Restore NodeSplitter Orientation: %s WidgetCount: %i", OrientationStr, WidgetCount);
     QSplitter* Splitter = nullptr;
 	if (!Testing)
 	{
@@ -953,7 +945,7 @@ bool DockContainerWidgetPrivate::restoreDockArea(CDockingStateReader& s,
 #endif
 
 	QString CurrentDockWidget = s.attributes().value("Current").toString();
-    RE_LOG_DEBUG("Restore NodeDockArea Current: %s ", qcstr(CurrentDockWidget));
+    RE_LOG_DEBUG("Restore NodeDockArea Current: %s ", CurrentDockWidget);
 
 	CDockAreaWidget* DockArea = nullptr;
 	if (!Testing)
@@ -1396,7 +1388,16 @@ emitAndExit:
     // one single visible dock widget
 	CDockWidget::emitTopLevelEventForWidget(TopLevelWidget, true);
 	dumpLayout();
-	d->emitDockAreasRemoved();
+    d->emitDockAreasRemoved();
+
+    if (CDockManager::testConfigFlag(CDockManager::AutoCloseWidgetlessFloatingWindow)) {
+        if (d->DockAreas.empty() && isFloating()) {
+            auto fw = floatingWidget();
+            if (fw) {
+                fw->close();
+            }
+        }
+    }
 }
 
 

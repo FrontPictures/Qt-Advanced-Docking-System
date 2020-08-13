@@ -21,6 +21,12 @@ class CDockGroupMenu : public QObject
 {
     Q_OBJECT
 public:
+    enum GroupFlag
+    {
+        GroupToSubmenu = 0x0001,  //!< If this flag is set, actions in menu will be grouped in sub menus
+        GroupToRoot = 0x0002,     //!< If the flag is all added actions will be placed in root menu and splitted with separators according to set groups
+    };
+
     explicit CDockGroupMenu(CDockManager *manager);
 
     /**
@@ -48,7 +54,13 @@ public:
     /**
      * Create action of group menu accoding to given area
      */
-    QList<QAction *> getActions(CDockAreaWidget *area);
+    QMenu *getMenu(CDockAreaWidget *area);
+
+    /**
+     * Sets group method. See GroupFlag enum.
+     * Must be set before add the firs action
+     */
+    void setGroupMethod(GroupFlag method);
 
 private:
     DockGroupMenuPrivate *d = nullptr;

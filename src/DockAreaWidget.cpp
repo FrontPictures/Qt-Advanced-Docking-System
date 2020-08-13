@@ -735,52 +735,15 @@ void CDockAreaWidget::reorderDockWidget(int fromIndex, int toIndex)
 	d->ContentsLayout->removeWidget(Widget);
 	d->ContentsLayout->insertWidget(toIndex, Widget);
     setCurrentIndex(toIndex);
+    emit widgetsReordered();
 }
 
 void CDockAreaWidget::updateGroupMenu()
 {
     if (d->DockManager && d->TitleBar) {
-//        QMenu *rootMenu = new QMenu();
-//        std::map<QString, QList<QAction *>> subMenus;
-//        const auto &widgetsList = d->DockManager->dockWidgetsMap();
-//        const auto &ownList = dockWidgets();
-//        // dont add widget which already tabbed and opened
-//        // if widget tabbed but closed - opening it
-//        for (const auto &w : widgetsList) {
-//            QAction *action = nullptr;
-//            if (ownList.contains(w)) {
-//                if (w->isClosed()) {
-//                    action = new QAction(w->windowTitle());
-//                    connect(action, &QAction::triggered, this, [=]() { w->toggleView(true); });
-//                } else {
-//                    continue;
-//                }
-//            } else {
-//                action = new QAction(w->windowTitle());
-//                connect(action, &QAction::triggered, this, [=]() {
-//                    d->DockManager->addDockWidgetTabToArea(w, this);
-//                    w->toggleView(true);
-//                });
-//            }
-//            const auto groupName = w->getGroupName();
-//            if (!groupName.isEmpty()) {
-//                subMenus[groupName] << action;
-//            } else {
-//                rootMenu->addAction(action);
-//            }
-//        }
-//        for (const auto &sm : subMenus) {
-//            auto subMenu = new QMenu(sm.first);
-//            subMenu->addActions(sm.second);
-//            rootMenu->addMenu(subMenu);
-//        }
-//        d->TitleBar->setGroupMenu(rootMenu);
-
-        QMenu *rootMenu = new QMenu();
-        auto gm = d->DockManager->groupMenu();
-        auto actionList = gm->getActions(this);
-        rootMenu->addActions(actionList);
-        d->TitleBar->setGroupMenu(rootMenu);
+        CDockGroupMenu *gm = d->DockManager->groupMenu();
+        auto groupMenu = gm->getMenu(this);
+        d->TitleBar->setGroupMenu(groupMenu);
     }
 }
 
@@ -838,7 +801,7 @@ void CDockAreaWidget::saveState(QXmlStreamWriter& s) const
 	auto CurrentDockWidget = currentDockWidget();
 	QString Name = CurrentDockWidget ? CurrentDockWidget->objectName() : "";
 	s.writeAttribute("Current", Name);
-    RE_LOG_DEBUG("CDockAreaWidget::saveState TabCount: %i Current: %s", d->ContentsLayout->count(), qcstr(Name));
+    RE_LOG_DEBUG("CDockAreaWidget::saveState TabCount: %i Current: %s", d->ContentsLayout->count(), Name);
 	for (int i = 0; i < d->ContentsLayout->count(); ++i)
 	{
 		dockWidget(i)->saveState(s);

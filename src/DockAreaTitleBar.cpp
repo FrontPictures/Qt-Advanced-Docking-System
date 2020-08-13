@@ -102,6 +102,11 @@ struct DockAreaTitleBarPrivate
 	 */
 	void createTabBar();
 
+    /**
+     * Creates menu with close and detach actions
+     */
+    QMenu *createGenaralGroupMenu(QWidget *parent);
+
 	/**
 	 * Convenience function for DockManager access
 	 */
@@ -151,7 +156,7 @@ DockAreaTitleBarPrivate::DockAreaTitleBarPrivate(CDockAreaTitleBar* _public) :
 void DockAreaTitleBarPrivate::createButtons()
 {
     QSizePolicy ButtonSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-    QSize buttonSize(25, 25);
+    QSize buttonSize(24, 24);
 
     // using additional widget to amke possible to styling titlle buttons are
     buttonsContainer = new QWidget;
@@ -160,16 +165,6 @@ void DockAreaTitleBarPrivate::createButtons()
     buttonsContainerLayout->setContentsMargins(0, 0, 0, 0);
     buttonsContainer->setLayout(buttonsContainerLayout);
     Layout->addWidget(buttonsContainer);
-
-    //Group button
-    GroupButton = new CTitleBarButton();
-    GroupButton->setObjectName("tabsGroupButton");
-    GroupButton->setAutoRaise(true);
-    GroupButton->setPopupMode(QToolButton::InstantPopup);
-    GroupButton->setText("+");
-    //GroupButton->setSizePolicy(ButtonSizePolicy);
-    GroupButton->setFixedSize(buttonSize);
-    buttonsContainerLayout->addWidget(GroupButton, 0);
 
     buttonsContainerLayout->addStretch();
 
@@ -186,39 +181,54 @@ void DockAreaTitleBarPrivate::createButtons()
 	_this->connect(TabsMenu, SIGNAL(aboutToShow()), SLOT(onTabsMenuAboutToShow()));
 	TabsMenuButton->setMenu(TabsMenu);
 	internal::setToolTip(TabsMenuButton, QObject::tr("List All Tabs"));
-    //TabsMenuButton->setSizePolicy(ButtonSizePolicy);
     TabsMenuButton->setFixedSize(buttonSize);
     buttonsContainerLayout->addWidget(TabsMenuButton, 0);
 	_this->connect(TabsMenuButton->menu(), SIGNAL(triggered(QAction*)),
-		SLOT(onTabsMenuActionTriggered(QAction*)));
+        SLOT(onTabsMenuActionTriggered(QAction*)));
 
-	// Undock button
-	UndockButton = new CTitleBarButton(testConfigFlag(CDockManager::DockAreaHasUndockButton));
-	UndockButton->setObjectName("detachGroupButton");
-	UndockButton->setAutoRaise(true);
-	internal::setToolTip(UndockButton, QObject::tr("Detach Group"));
-    //UndockButton->setSizePolicy(ButtonSizePolicy);
+    if (testConfigFlag(CDockManager::DockAreaHasGroupMenuButton)) {
+        CDockManager::setConfigFlag(CDockManager::DockAreaHasUndockButton, false);
+        CDockManager::setConfigFlag(CDockManager::DockAreaHasCloseButton, false);
+    }
+
+    //Group button
+    GroupButton = new CTitleBarButton(testConfigFlag(CDockManager::DockAreaHasGroupMenuButton));
+    GroupButton->setObjectName("tabsGroupButton");
+    GroupButton->setAutoRaise(true);
+    GroupButton->setPopupMode(QToolButton::InstantPopup);
+    internal::setButtonIcon(GroupButton, QStyle::SP_ToolBarHorizontalExtensionButton, ads::DockAreaGroupMenuIcon);
+    GroupButton->setFixedSize(buttonSize);
+    buttonsContainerLayout->addWidget(GroupButton);
+
+    auto *menu = createGenaralGroupMenu(GroupButton);
+    GroupButton->setMenu(menu);
+
+    // Undock button
+    UndockButton = new CTitleBarButton(testConfigFlag(CDockManager::DockAreaHasUndockButton));
+    UndockButton->setObjectName("detachGroupButton");
+    UndockButton->setAutoRaise(true);
+    internal::setToolTip(UndockButton, QObject::tr("Detach Group"));
+    internal::setButtonIcon(UndockButton, QStyle::SP_TitleBarNormalButton, ads::DockAreaUndockIcon);
     UndockButton->setFixedSize(buttonSize);
-    buttonsContainerLayout->addWidget(UndockButton, 0);
-	_this->connect(UndockButton, SIGNAL(clicked()), SLOT(onUndockButtonClicked()));
+    buttonsContainerLayout->addWidget(UndockButton);
+    _this->connect(UndockButton, SIGNAL(clicked()), SLOT(onUndockButtonClicked()));
 
-	// Close button
-	CloseButton = new CTitleBarButton(testConfigFlag(CDockManager::DockAreaHasCloseButton));
-	CloseButton->setObjectName("dockAreaCloseButton");
-	CloseButton->setAutoRaise(true);
-	if (testConfigFlag(CDockManager::DockAreaCloseButtonClosesTab))
-	{
-		internal::setToolTip(CloseButton, QObject::tr("Close Active Tab"));
-	}
-	else
-	{
-		internal::setToolTip(CloseButton, QObject::tr("Close Group"));
-	}
-    //CloseButton->setSizePolicy(ButtonSizePolicy);
+    // Close button
+    CloseButton = new CTitleBarButton(testConfigFlag(CDockManager::DockAreaHasCloseButton));
+    CloseButton->setObjectName("dockAreaCloseButton");
+    CloseButton->setAutoRaise(true);
+    internal::setButtonIcon(UndockButton, QStyle::SP_TitleBarCloseButton, ads::DockAreaCloseIcon);
+    if (testConfigFlag(CDockManager::DockAreaCloseButtonClosesTab))
+    {
+        internal::setToolTip(CloseButton, QObject::tr("Close Active Tab"));
+    }
+    else
+    {
+        internal::setToolTip(CloseButton, QObject::tr("Close Group"));
+    }
     CloseButton->setFixedSize(buttonSize);
-	CloseButton->setIconSize(QSize(16, 16));
-    buttonsContainerLayout->addWidget(CloseButton, 0);
-	_this->connect(CloseButton, SIGNAL(clicked()), SLOT(onCloseButtonClicked()));
+    buttonsContainerLayout->addWidget(CloseButton);
+    _this->connect(CloseButton, SIGNAL(clicked()), SLOT(onCloseButtonClicked()));
 }
 
 
@@ -236,6 +246,22 @@ void DockAreaTitleBarPrivate::createTabBar()
 	_this->connect(TabBar, SIGNAL(currentChanged(int)), SLOT(onCurrentTabChanged(int)));
 	_this->connect(TabBar, SIGNAL(tabBarClicked(int)), SIGNAL(tabBarClicked(int)));
 	_this->connect(TabBar, SIGNAL(elidedChanged(bool)), SLOT(markTabsMenuOutdated()));
+}
+
+
+//============================================================================
+QMenu *DockAreaTitleBarPrivate::createGenaralGroupMenu(QWidget *parent)
+{
+    QMenu *menu = new QMenu(parent);
+    auto *detachAct = menu->addAction("Detach Group");
+    auto *closeAct = menu->addAction("Close Group");
+    _this->connect(detachAct, &QAction::triggered, [=](bool) {
+        _this->onUndockButtonClicked();
+    });
+    _this->connect(closeAct, &QAction::triggered, [=](bool) {
+        _this->onCloseButtonClicked();
+    });
+    return menu;
 }
 
 
@@ -296,7 +322,6 @@ CDockAreaTitleBar::CDockAreaTitleBar(CDockAreaWidget* parent) :
     d->Layout->setSpacing(0);
 	setLayout(d->Layout);
 	setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-    setFixedHeight(25);
 
 	d->createTabBar();
 	d->createButtons();
@@ -424,7 +449,11 @@ void CDockAreaTitleBar::onTabsMenuActionTriggered(QAction* Action)
 //============================================================================
 void CDockAreaTitleBar::updateDockWidgetActionsButtons()
 {
-	CDockWidget* DockWidget = d->TabBar->currentTab()->dockWidget();
+    auto currentTab = d->TabBar->currentTab();
+    if (!currentTab) {
+        return;
+    }
+    CDockWidget* DockWidget = currentTab->dockWidget();
 	if (!d->DockWidgetActionsButtons.isEmpty())
 	{
 		for (auto Button : d->DockWidgetActionsButtons)
@@ -494,7 +523,7 @@ void CDockAreaTitleBar::setVisible(bool Visible)
     markTabsMenuOutdated();
 }
 
-void CDockAreaTitleBar::setGroupMenu(QMenu *menu)
+void CDockAreaTitleBar::setGroupMenu(QMenu *widgetsMenu)
 {
     if (d->GroupButton) {
         auto oldMenu = d->GroupButton->menu();
@@ -506,10 +535,12 @@ void CDockAreaTitleBar::setGroupMenu(QMenu *menu)
             qDeleteAll(list);
             oldMenu->deleteLater();
         }
-        QMenu *newMenu = new QMenu(d->GroupButton);
-        newMenu->addActions(menu->actions());
-        d->GroupButton->setMenu(newMenu);
-        menu->deleteLater();
+        auto *menu = new QMenu(d->GroupButton);
+        widgetsMenu->setTitle(tr("Insert widget"));
+        menu->addMenu(widgetsMenu);
+        menu->addSeparator();
+        menu->addActions(d->createGenaralGroupMenu(d->GroupButton)->actions());
+        d->GroupButton->setMenu(menu);
         if (needOpen) {
             d->GroupButton->showMenu();
         }

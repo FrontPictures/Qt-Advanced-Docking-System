@@ -331,6 +331,12 @@ signals:
 	 * via toggle view function
 	 */
 	void viewToggled(bool Open);
+
+    /**
+     * This signal is emitted if oreder of widgets changed
+     * via dragging widgets tabs
+     */
+    void widgetsReordered();
 }; // class DockAreaWidget
 }
  // namespace ads

@@ -182,6 +182,8 @@ public:
 		FocusHighlighting = 0x200000, //!< enables styling of focused dock widget tabs or floating widget titlebar
 		EqualSplitOnInsertion = 0x400000, ///!< if enabled, the space is equally distributed to all widgets in a  splitter
         NotSaveFloatingGeometry = 0x10000000, //!< If this flag set managed doesn't save geometry of floating containers in saveState function, but saveFloatingGeometry will save geometry anywhere
+        AutoCloseWidgetlessFloatingWindow = 0x20000000, //!< If this flag set floating window will closing automatically after removing last widget from it
+        DockAreaHasGroupMenuButton = 0x40000000, //!< If this flag set area close button and undock button will be replaced by button with menu which contains close and undock actions
 
         DefaultDockAreaButtons = DockAreaHasCloseButton
 							   | DockAreaHasUndockButton
@@ -302,7 +304,7 @@ public:
     /**
      * Rename DockWidget title, tab, view action
      */
-    void renameDockWidget(CDockWidget* Dockwidget, const QString &name);
+    void renameDockWidget(CDockWidget* Dockwidget, const QString &name, const QString &objectName);
 
 	/**
 	 * This function returns a readable reference to the internal dock

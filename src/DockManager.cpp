@@ -201,11 +201,7 @@ void DockManagerPrivate::loadStylesheet()
 	QString Result;
 	QString FileName = ":ads/stylesheets/";
 	FileName += CDockManager::testConfigFlag(CDockManager::FocusHighlighting)
-        ? "focus_highlighting_graphite" : "default";
-#ifdef Q_OS_LINUX
-    FileName += "_linux";
-#endif
-    FileName += ".css";
+        ? "focus_highlighting_graphite.css" : "default.css";
 	QFile StyleSheetFile(FileName);
 	StyleSheetFile.open(QIODevice::ReadOnly);
 	QTextStream StyleSheetStream(&StyleSheetFile);
@@ -538,7 +534,7 @@ CDockManager::CDockManager(QWidget *parent) :
 	CDockContainerWidget(this, parent),
 	d(new DockManagerPrivate(this))
 {
-    setContentsMargins(1, 0, 1, 0);
+    setContentsMargins(0, 0, 0, 0);
 	createRootSplitter();
 	QMainWindow* MainWindow = qobject_cast<QMainWindow*>(parent);
 	if (MainWindow)
@@ -882,7 +878,7 @@ void CDockManager::removeDockWidget(CDockWidget* Dockwidget)
 }
 
 //============================================================================
-void CDockManager::renameDockWidget(CDockWidget *Dockwidget, const QString &name)
+void CDockManager::renameDockWidget(CDockWidget *Dockwidget, const QString &name, const QString &objectName)
 {
     auto oldName = Dockwidget->windowTitle();
     if (oldName == name) {
@@ -909,7 +905,7 @@ void CDockManager::renameDockWidget(CDockWidget *Dockwidget, const QString &name
         }
 
         d->DockWidgetsMap.remove(Dockwidget->objectName());
-        Dockwidget->renameDockWidget(name);
+        Dockwidget->renameDockWidget(name, objectName);
         d->DockWidgetsMap[Dockwidget->objectName()] = Dockwidget;
     }
     d->GroupMenu->renameAction(Dockwidget->getGroupName(), oldName, name);

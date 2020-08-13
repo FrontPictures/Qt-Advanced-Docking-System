@@ -227,21 +227,30 @@ void CDockFocusController::onApplicationFocusChanged(QWidget* focusedOld, QWidge
 		return;
 	}
 
+    CDockWidget* DockWidget = nullptr;
+
 	// If the close button in another tab steals the focus from the current
 	// active dock widget content, i.e. if the user clicks its close button,
 	// then we immediately give the focus back to the previous focused widget
 	// focusedOld
+    // If old widget is close button and new widget is also a close button
+    // to break pinpong between buttons set focus to new close buttons dock widget
 	if (CDockManager::testConfigFlag(CDockManager::AllTabsHaveCloseButton))
 	{
 		auto OtherDockWidgetTab = internal::findParent<CDockWidgetTab*>(focusedNow);
-		if (OtherDockWidgetTab && focusedOld)
+        if (OtherDockWidgetTab && focusedOld)
 		{
-			focusedOld->setFocus();
-			return;
+            bool isOldCloseButton = focusedOld->objectName() == "tabCloseButton";
+            bool isNewCloseButton = focusedNow->objectName() == "tabCloseButton";
+            if(isOldCloseButton && isNewCloseButton) {
+                DockWidget = OtherDockWidgetTab->dockWidget();
+            } else {
+                focusedOld->setFocus();
+                return;
+            }
 		}
 	}
 
-    CDockWidget* DockWidget = nullptr;
 	auto DockWidgetTab = qobject_cast<CDockWidgetTab*>(focusedNow);
 	if (DockWidgetTab)
 	{

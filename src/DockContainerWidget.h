@@ -284,6 +284,11 @@ signals:
     void currentDockWidgetChanged(CDockWidget *currentWidget);
 
     /**
+     * This signal is emitted if in any dock areas widgets was reordered
+     */
+    void dockWidgetsReordered();
+
+    /**
      * This signal is emitted if in any splitter moved by user
      */
     void splitterMoved();

@@ -896,10 +896,10 @@ bool CDockWidget::closeDockWidgetInternal(bool ForceClose)
 }
 
 //============================================================================
-void CDockWidget::renameDockWidget(const QString &name)
+void CDockWidget::renameDockWidget(const QString &name, const QString &objectName)
 {
     setWindowTitle(name);
-    setObjectName(name);
+    setObjectName(objectName);
     d->TabWidget->setText(name);
     d->ToggleViewAction->setText(name);
 }

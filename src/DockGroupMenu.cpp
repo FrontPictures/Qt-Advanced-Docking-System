@@ -5,7 +5,6 @@
 #include "DockManager.h"
 #include "DockWidget.h"
 
-
 namespace ads {
 struct DockGroupMenuPrivate
 {
@@ -14,6 +13,7 @@ struct DockGroupMenuPrivate
  */
     CDockGroupMenu*	_this			= nullptr;
     CDockManager*	DockManager	    = nullptr;
+    CDockGroupMenu::GroupFlag GroupMethod = CDockGroupMenu::GroupToSubmenu;
 
     /**
      * Private data constructor
@@ -24,10 +24,22 @@ struct DockGroupMenuPrivate
         DockManager = manager;
     }
 
-    QList<QAction *> createActions(const std::map<QString, std::map<QString, QAction *>> &groupedActions)
+    void fillMenu(QMenu *menu,
+                  const std::vector<QString> &list,
+                  const std::map<QString, QAction *> &actions)
     {
-        QList<QAction *> res;
-        for (const auto &ga : mList) {
+        for (const auto &name : list) {
+            auto action_it = actions.find(name);
+            if (action_it != actions.end()) {
+                menu->addAction(action_it->second);
+            }
+        }
+    }
+
+    QMenu *createMenu(const std::map<QString, std::map<QString, QAction *>> &groupedActions)
+    {
+        QMenu *resMenu = new QMenu();
+        for (const auto &ga : List) {
             const auto &groupName = ga.first;
             const auto &actionList = ga.second;
             auto groupA_it = groupedActions.find(groupName);
@@ -40,26 +52,33 @@ struct DockGroupMenuPrivate
                 for (const auto &name : actionList) {
                     auto action_it = actionMap.find(name);
                     if (action_it != actionMap.end()) {
-                        res << action_it->second;
+                        resMenu->addAction(action_it->second);
                     }
                 }
             } else {
-                QAction *subaction = new QAction(groupName);
-                auto submenu = new QMenu();
-                subaction->setMenu(submenu);
-                for (const auto &name : actionList) {
-                    auto action_it = actionMap.find(name);
-                    if (action_it != actionMap.end()) {
-                        submenu->addAction(action_it->second);
+                switch (GroupMethod) {
+                case CDockGroupMenu::GroupToSubmenu:{
+                    QAction *subaction = new QAction(groupName);
+                    auto submenu = new QMenu();
+                    subaction->setMenu(submenu);
+                    fillMenu(submenu, actionList, actionMap);
+                    resMenu->addAction(subaction);
+                }break;
+                case CDockGroupMenu::GroupToRoot:
+                    fillMenu(resMenu, actionList, actionMap);
+                    if (!actionList.empty()) {
+                        resMenu->addSeparator();
                     }
+                    break;
+                default:
+                    break;
                 }
-                res << subaction;
             }
         }
-        return res;
+        return resMenu;
     }
 
-    std::vector<std::pair<QString, std::vector<QString>>> mList;
+    std::vector<std::pair<QString, std::vector<QString>>> List;
 };
 
 
@@ -71,16 +90,16 @@ CDockGroupMenu::CDockGroupMenu(CDockManager *manager)
 
 void CDockGroupMenu::addGroup(const QString &name, int index)
 {
-    if (index > -1 && d->mList.size() > index) {
-        d->mList.insert(d->mList.begin() + index, {name, {}});
+    if (index > -1 && d->List.size() > index) {
+        d->List.insert(d->List.begin() + index, {name, {}});
     } else {
-        d->mList.push_back({name, {}});
+        d->List.push_back({name, {}});
     }
 }
 
 void CDockGroupMenu::addWidget(const QString &groupName, CDockWidget *widget, int index)
 {
-    for (auto &g : d->mList) {
+    for (auto &g : d->List) {
         auto &actionList = g.second;
         auto &group = g.first;
         if (group == groupName) {
@@ -96,7 +115,7 @@ void CDockGroupMenu::addWidget(const QString &groupName, CDockWidget *widget, in
 
 void CDockGroupMenu::removeWidget(CDockWidget *widget)
 {
-    for (auto &g : d->mList) {
+    for (auto &g : d->List) {
         auto &actionList = g.second;
         const auto &actionName = widget->windowTitle();
         for (auto it = actionList.begin(); it != actionList.end(); ++it) {
@@ -110,7 +129,7 @@ void CDockGroupMenu::removeWidget(CDockWidget *widget)
 
 void CDockGroupMenu::renameAction(const QString &groupName, const QString &oldName, const QString &newName)
 {
-    for (auto &ga : d->mList) {
+    for (auto &ga : d->List) {
         if (ga.first == groupName) {
             auto &list = ga.second;
             for (size_t i = 0; i < list.size(); ++i) {
@@ -123,7 +142,7 @@ void CDockGroupMenu::renameAction(const QString &groupName, const QString &oldNa
     }
 }
 
-QList<QAction *> CDockGroupMenu::getActions(CDockAreaWidget *area)
+QMenu *CDockGroupMenu::getMenu(CDockAreaWidget *area)
 {
     if (!d->DockManager) {
         return {};
@@ -132,17 +151,13 @@ QList<QAction *> CDockGroupMenu::getActions(CDockAreaWidget *area)
     std::map<QString, std::map<QString, QAction *>> groupActions;
 
     const auto &widgetsList = d->DockManager->dockWidgetsMap();
-    // dont add widget which already tabbed and opened
-    // if widget tabbed but closed - opening it
+    // adding all widgets
+    // if widget tabbed - opening it
     for (const auto &w : widgetsList) {
         QAction *action = nullptr;
         if (w->dockAreaWidget() == area) {
-            if (w->isClosed()) {
-                action = new QAction(w->windowTitle());
-                connect(action, &QAction::triggered, this, [=]() { w->toggleView(true); });
-            } else {
-                continue;
-            }
+            action = new QAction(w->windowTitle());
+            connect(action, &QAction::triggered, this, [=]() { w->toggleView(true); });
         } else {
             action = new QAction(w->windowTitle());
             connect(action, &QAction::triggered, this, [=]() {
@@ -153,7 +168,12 @@ QList<QAction *> CDockGroupMenu::getActions(CDockAreaWidget *area)
         const auto groupName = w->getGroupName();
         groupActions[groupName].insert({action->text(), action});
     }
-    return d->createActions(groupActions);
+    return d->createMenu(groupActions);
+}
+
+void CDockGroupMenu::setGroupMethod(CDockGroupMenu::GroupFlag method)
+{
+    d->GroupMethod = method;
 }
 
 }

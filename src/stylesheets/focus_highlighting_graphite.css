@@ -13,26 +13,24 @@ ads--CDockAreaWidget {
 
 ads--CDockAreaWidget #tabsGroupButton
 {
+    background: none;
     border: none;
-    margin-left: 1px;
-    margin-bottom: 1px;
+    padding: 0px 0px;
+    qproperty-icon: url("")/* disable standart icon */;
+    image: url(":/icons/resources/icon_widget_header_menu_norm.png");
+}
+
+ads--CDockAreaWidget #tabsGroupButton:pressed
+{
+    background: none;
+    border: none;
+    padding: 0px 0px;
+    image: url(:/icons/resources/icon_widget_header_menu_pressed.png);
 }
 
 ads--CDockAreaWidget #tabsGroupButton::menu-indicator
 {
     image: none;
-}
-
-ads--CDockAreaWidget #tabsGroupButton:hover
-{
-        background-color: rgb(60,60,60);
-        border: none;
-}
-
-ads--CDockAreaWidget #tabsGroupButton:pressed
-{
-        background: rgba(0, 0, 0, 32);
-        border: none;
 }
 
 /* ========================= */
@@ -146,4 +144,9 @@ ads--CDockAreaTitleBar #buttonsContainer
     margin-left: 1px;
     margin-bottom: 1px;
     background: palette(alternate-base);
+}
+
+ads--CDockAreaTitleBar #dockAreaTitleBar
+{
+    height: 24px;
 }
