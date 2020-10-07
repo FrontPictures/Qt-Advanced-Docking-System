@@ -1211,7 +1211,7 @@ CDockContainerWidget::CDockContainerWidget(CDockManager* DockManager, QWidget *p
 	d->isFloating = floatingWidget() != nullptr;
 
 	d->Layout = new QGridLayout();
-	d->Layout->setContentsMargins(0, 1, 0, 1);
+    d->Layout->setContentsMargins(0, 2, 0, 2);
 	d->Layout->setSpacing(0);
 	setLayout(d->Layout);
 
