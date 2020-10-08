@@ -1,3 +1,6 @@
+if (UNIX)
+	find_package(Qt5 5.5 COMPONENTS X11Extras REQUIRED)
+endif()
 set(ads_SRCS
     ads_globals.cpp
     DockAreaTabBar.cpp
@@ -51,3 +54,6 @@ target_sources(${PROJECT_NAME} PRIVATE ${ads_SRCS} ${ads_HEADERS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(${PROJECT_NAME} PRIVATE ADS_STATIC)
+if (UNIX)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::X11Extras)
+endif()

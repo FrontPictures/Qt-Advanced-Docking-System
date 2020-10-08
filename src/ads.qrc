@@ -8,6 +8,10 @@
         <file>images/tabs-menu-button.svg</file>
         <file>images/detach-button.svg</file>
         <file>images/detach-button-disabled.svg</file>
+        <file>images/maximize-button.svg</file>
+        <file>images/maximize-button-focused.svg</file>
+        <file>images/restore-button.svg</file>
+        <file>images/restore-button-focused.svg</file>
         <file>stylesheets/focus_highlighting_graphite.css</file>
     </qresource>
 </RCC>
