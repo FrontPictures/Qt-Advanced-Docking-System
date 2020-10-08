@@ -367,6 +367,8 @@ void CDockWidget::setFeatures(DockWidgetFeatures features)
 	d->Features = features;
 	emit featuresChanged(d->Features);
 	d->TabWidget->onDockWidgetFeaturesChanged();
+	if(CDockAreaWidget* DockArea = dockAreaWidget())
+		DockArea->onDockWidgetFeaturesChanged();
 }
 
 
@@ -489,6 +491,13 @@ void CDockWidget::setMinimumSizeHintMode(eMinimumSizeHintMode Mode)
 
 
 //============================================================================
+bool CDockWidget::isCentralWidget() const
+{
+    return dockManager()->centralWidget() == this;
+}
+
+
+//============================================================================
 void CDockWidget::toggleView(bool Open)
 {
 	// If the toggle view action mode is ActionModeShow, then Open is always
@@ -567,6 +576,7 @@ void CDockWidget::setDockArea(CDockAreaWidget* DockArea)
 {
 	d->DockArea = DockArea;
 	d->ToggleViewAction->setChecked(DockArea != nullptr && !this->isClosed());
+	setParent(DockArea);
 }
 
 
