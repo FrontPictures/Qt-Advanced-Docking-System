@@ -18,7 +18,6 @@
 ** License along with this library; If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-
 //============================================================================
 /// \file   DockSplitter.h
 /// \author Uwe Kindler
@@ -29,54 +28,118 @@
 //============================================================================
 //                                   INCLUDES
 //============================================================================
-#include <QSplitter>
+#include <QWidget>
 
 #include "ads_globals.h"
 
-namespace ads
-{
-struct DockSplitterPrivate;
+namespace ads {
 
-/**
- * Splitter used internally instead of QSplitter with some additional
- * fuctionality.
- */
-class ADS_EXPORT CDockSplitter : public QSplitter
-{
-	Q_OBJECT
-private:
-	DockSplitterPrivate* d;
-	friend struct DockSplitterPrivate;
+class SplitterHandle;
 
+class ADS_EXPORT Splitter : public QWidget
+{
+    Q_OBJECT
 public:
-	CDockSplitter(QWidget *parent = Q_NULLPTR);
-	CDockSplitter(Qt::Orientation orientation, QWidget *parent = Q_NULLPTR);
+    Splitter(Qt::Orientation orient, QWidget *parent = Q_NULLPTR);
 
-	/**
-	 * Prints debug info
-	 */
-	virtual ~CDockSplitter();
+    void insertWidget(QWidget *widget, int index, int offset);
+    QWidget *replaceWidget(int index, QWidget *widget);
 
-	/**
-	 * Returns true, if any of the internal widgets is visible
-	 */
-	bool hasVisibleContent() const;
+    void insertAllWidgetsFrom(Splitter *other, int index, int offset);
 
-	/**
-	 * Returns first widget or nullptr if splitter is empty
-	 */
-	QWidget* firstWidget() const;
+    QWidget *removeWidget(int index);
 
-	/**
-	 * Returns last widget of nullptr is splitter is empty
-	 */
-	QWidget* lastWidget() const;
+    int indexOf(QWidget *w) const;
+    int count() const;
+    QWidget *widget(int index) const;
+
+    void setParts(QList<double> parts);
+    QList<double> parts() const;
+
+    void setOrientation(Qt::Orientation o);
+    Qt::Orientation orientation() const;
+
+    void moveSplitter(int handleIndex, int pos);
+
+    constexpr static int minSizePx = 40;
+    constexpr static int handleWidth = 2;
 
     /**
-     * Returns true if the splitter contains central widget of dock manager.
+	 * Returns true, if any of the internal widgets is visible
      */
-    bool isResizingWithContainer() const;
-}; // class CDockSplitter
+    bool hasVisibleContent() const;
+
+    /**
+	 * Returns first widget or nullptr if splitter is empty
+     */
+    QWidget *firstWidget() const;
+
+    /**
+	 * Returns last widget of nullptr is splitter is empty
+     */
+    QWidget *lastWidget() const;
+
+signals:
+    void splitterMoved();
+
+protected:
+    bool event(QEvent *e) override;
+    void childEvent(QChildEvent *c) override;
+    void resizeEvent(QResizeEvent *e) override;
+
+private:
+    bool indexInRange(int index) const;
+    int findNextVisibleIndex(int fromIndex, int insertOffset) const;
+
+    bool equalParts() const;
+    double getEqualPart() const;
+    void scaleParts(double factor);
+
+    /** returns factor */
+    double rescaleParts(QList<double> *parts = nullptr);
+
+    /** scales visible part to one leaving hidden untouched */
+    void rescaleVisibleParts();
+
+    void updateSizes(bool update);
+    bool shouldShow(QWidget *w);
+
+    int mVisibleContentCount = 0;
+    Qt::Orientation mOrientation = Qt::Horizontal;
+    QList<QWidget *> mWidgets;
+    QList<SplitterHandle *> mHandles;
+    QList<double> mParts;
+    bool mFirstShow = true;
+    bool mBlockChildAdd = false;
+};
+
+class ADS_EXPORT SplitterHandle : public QWidget
+{
+    Q_OBJECT
+public:
+    SplitterHandle(Qt::Orientation o, int handleIndex, Splitter *splitter);
+
+    void setOrientation(Qt::Orientation o);
+    Qt::Orientation orientation() const;
+
+    void setHandlePos(int pos);
+
+protected:
+    void paintEvent(QPaintEvent *) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
+    bool event(QEvent *e) override;
+
+private:
+    Splitter *mSplitter;
+    int mIndex = 0;
+    Qt::Orientation mOrientation = Qt::Horizontal;
+
+    bool mHover = false;;
+    int mMouseOffset = 0;
+    bool mPressed = false;
+};
 
 } // namespace ads
 

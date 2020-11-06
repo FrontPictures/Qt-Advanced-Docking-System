@@ -64,11 +64,9 @@ QT_FORWARD_DECLARE_CLASS(QAbstractButton)
 // dumps to qDebug and std::cout after layout changes
 #define ADS_DEBUG_LEVEL 0
 
-QT_FORWARD_DECLARE_CLASS(QSplitter)
-
 namespace ads
 {
-class CDockSplitter;
+class Splitter;
 
 enum DockWidgetArea
 {
@@ -132,8 +130,6 @@ namespace internal
 {
 static const bool RestoreTesting = true;
 static const bool Restore = false;
-static const char* const ClosedProperty = "close";
-static const char* const DirtyProperty = "dirty";
 
 #ifdef Q_OS_LINUX
 // Utils to directly communicate with the X server
@@ -163,15 +159,10 @@ QString windowManager();
 #endif
 
 /**
- * Replace the from widget in the given splitter with the To widget
- */
-void replaceSplitterWidget(QSplitter* Splitter, QWidget* From, QWidget* To);
-
-/**
  * This function walks the splitter tree upwards to hides all splitters
  * that do not have visible content
  */
-void hideEmptyParentSplitters(CDockSplitter* FirstParentSplitter);
+void hideEmptyParentSplitters(Splitter* FirstParentSplitter);
 
 /**
  * Convenience class for QPair to provide better naming than first and

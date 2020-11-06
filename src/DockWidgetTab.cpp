@@ -37,7 +37,6 @@
 #include <QMouseEvent>
 #include <QStyle>
 #include <QApplication>
-#include <QSplitter>
 #include <QDebug>
 #include <QToolButton>
 #include <QPushButton>
@@ -257,6 +256,9 @@ void DockWidgetTabPrivate::moveTab(QMouseEvent* ev)
 bool DockWidgetTabPrivate::startFloating(eDragState DraggingState)
 {
 	auto dockContainer = DockWidget->dockContainer();
+    if (!dockContainer) {
+        return false;
+    }
     ADS_PRINT("isFloating " << dockContainer->isFloating());
     ADS_PRINT("areaCount " << dockContainer->dockAreaCount());
     ADS_PRINT("widgetCount " << DockWidget->dockAreaWidget()->dockWidgetsCount());

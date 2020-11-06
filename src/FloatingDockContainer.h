@@ -178,7 +178,13 @@ protected: // reimplements QWidget
 	virtual void changeEvent(QEvent *event) override;
 	virtual void closeEvent(QCloseEvent *event) override;
 	virtual void hideEvent(QHideEvent *event) override;
-	virtual void showEvent(QShowEvent *event) override;
+    virtual void showEvent(QShowEvent *event) override;
+#ifndef Q_OS_LINUX
+    virtual void resizeEvent(QResizeEvent *event) override;
+#endif
+#if !defined(Q_OS_LINUX) && !defined(Q_OS_MACOS)
+    virtual void moveEvent(QMoveEvent *event) override;
+#endif
 
 #ifdef Q_OS_MACOS
 	virtual bool event(QEvent *e) override;
@@ -290,6 +296,9 @@ public:
 	 */
 	bool hasNativeTitleBar();
 #endif
+
+signals:
+    void geomertyChanged();
 
 }; // class FloatingDockContainer
 }

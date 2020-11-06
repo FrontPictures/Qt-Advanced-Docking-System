@@ -286,15 +286,6 @@ QString windowManager()
 }
 #endif
 
-
-//============================================================================
-void replaceSplitterWidget(QSplitter* Splitter, QWidget* From, QWidget* To)
-{
-	int index = Splitter->indexOf(From);
-	From->setParent(nullptr);
-	Splitter->insertWidget(index, To);
-}
-
 //============================================================================
 CDockInsertParam dockAreaInsertParameters(DockWidgetArea Area)
 {
@@ -325,15 +316,15 @@ QPixmap createTransparentPixmap(const QPixmap& Source, qreal Opacity)
 
 
 //============================================================================
-void hideEmptyParentSplitters(CDockSplitter* Splitter)
+void hideEmptyParentSplitters(Splitter* splitter)
 {
-	while (Splitter && Splitter->isVisible())
+    while (splitter && splitter->isVisible())
 	{
-		if (!Splitter->hasVisibleContent())
+        if (!splitter->hasVisibleContent())
 		{
-			Splitter->hide();
+            splitter->hide();
 		}
-		Splitter = internal::findParent<CDockSplitter*>(Splitter);
+        splitter = internal::findParent<Splitter*>(splitter);
 	}
 }
 

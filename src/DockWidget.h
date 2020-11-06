@@ -101,17 +101,6 @@ protected:
     void saveState(QXmlStreamWriter& Stream) const;
 
     /**
-     * This is a helper function for the dock manager to flag this widget
-     * as unassigned.
-     * When calling the restore function, it may happen, that the saved state
-     * contains less dock widgets then currently available. All widgets whose
-     * data is not contained in the saved state, are flagged as unassigned
-     * after the restore process. If the user shows an unassigned dock widget,
-     * a floating widget will be created to take up the dock widget.
-     */
-    void flagAsUnassigned();
-
-    /**
      * Call this function to emit a topLevelChanged() signal and to update
      * the dock area tool bar visibility
      */

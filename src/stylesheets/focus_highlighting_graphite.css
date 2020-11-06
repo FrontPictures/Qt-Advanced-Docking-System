@@ -57,7 +57,7 @@ ads--CDockWidgetTab[activeTab="true"] QLabel {
 
 /* Focus related styling */
 ads--CDockWidgetTab[focused="true"] {
-        background: palette(highlight);
+        background: #385e8c;
 }
 
 ads--CDockWidgetTab[focused="true"]>#tabCloseButton {
@@ -72,7 +72,7 @@ ads--CDockWidgetTab[focused="true"]>#tabCloseButton:pressed {
 }
 
 ads--CDockWidgetTab[focused="true"] QLabel {
-        color: palette(light);
+        color: palette(bright-text);
 }
 /* ========================= */
 
@@ -83,12 +83,12 @@ ads--CDockAreaTabBar #tabsContainerWidget
 
 ads--CDockWidget {
         background: palette(window);
-        border-top: 2px solid palette(window);
+        border-top: 1px solid palette(window);
 }
 
 ads--CDockWidget[focused="true"] {
         background: palette(window);
-        border-top: 2px solid palette(highlight);
+        border-top: 1px solid #385e8c;
 }
 
 ads--CTitleBarButton {
@@ -134,7 +134,7 @@ QScrollArea#dockWidgetScrollArea {
     image: url(":/icons/resources/MinimizeWindowIcon.png");
 }
 
-ads--CDockSplitter::handle {
+ads--Splitter::handle {
     background-color: transparent;
     height: 2px;
 }

@@ -160,7 +160,7 @@ public:
 		ActiveTabHasCloseButton = 0x0001,    //!< If this flag is set, the active tab in a tab area has a close button
 		DockAreaHasCloseButton = 0x0002,     //!< If the flag is set each dock area has a close button
 		DockAreaCloseButtonClosesTab = 0x0004,//!< If the flag is set, the dock area close button closes the active tab, if not set, it closes the complete dock area
-		OpaqueSplitterResize = 0x0008, //!< See QSplitter::setOpaqueResize() documentation
+        // 0x0008 is available
 		XmlAutoFormattingEnabled = 0x0010,//!< If enabled, the XML writer automatically adds line-breaks and indentation to empty sections between elements (ignorable whitespace).
 		XmlCompressionEnabled = 0x0020,//!< If enabled, the XML output will be compressed and is not human readable anymore
 		TabCloseButtonIsToolButton = 0x0040,//! If enabled the tab close buttons will be QToolButtons instead of QPushButtons - disabled by default
@@ -181,7 +181,7 @@ public:
                                                     //!< this only makes sense for non draggable and non floatable widgets and enables the creation of some kind of "central" widget
 
 		FocusHighlighting = 0x200000, //!< enables styling of focused dock widget tabs or floating widget titlebar
-		EqualSplitOnInsertion = 0x400000, ///!< if enabled, the space is equally distributed to all widgets in a  splitter
+        // 0x400000 is available
         NotSaveFloatingGeometry = 0x10000000, //!< If this flag set managed doesn't save geometry of floating containers in saveState function, but saveFloatingGeometry will save geometry anywhere
         AutoCloseWidgetlessFloatingWindow = 0x20000000, //!< If this flag set floating window will closing automatically after removing last widget from it
         DockAreaHasGroupMenuButton = 0x40000000, //!< If this flag set area close button and undock button will be replaced by button with menu which contains close and undock actions
@@ -203,7 +203,6 @@ public:
 		                  | FloatingContainerHasWidgetTitle,///< default base configuration settings
 
         DefaultOpaqueConfig = DefaultBaseConfig
-		                    | OpaqueSplitterResize
 		                    | OpaqueUndocking, ///< the default configuration with opaque operations - this may cause issues if ActiveX or Qt 3D windows are involved
 
 		DefaultNonOpaqueConfig = DefaultBaseConfig
@@ -287,15 +286,18 @@ public:
 	 * This function will add the given Dockwidget to the given DockAreaWidget
 	 * as a new tab.
 	 */
-	CDockAreaWidget* addDockWidgetTabToArea(CDockWidget* Dockwidget,
+    CDockAreaWidget* moveDockWidgetTabToArea(CDockWidget* Dockwidget,
 		CDockAreaWidget* DockAreaWidget);
 
 	/**
 	 * Adds the given DockWidget floating and returns the created
+     * CFloatingDockContainer instance.
      * if hide is true will hide widget window
-	 * CFloatingDockContainer instance.
 	 */
     CFloatingDockContainer* addDockWidgetFloating(CDockWidget* Dockwidget, bool hide = false);
+
+    void addDockWidgetUnassigned(CDockWidget* Dockwidget);
+    void moveDockWidgetToUnassigned(CDockWidget* Dockwidget);
 
 	/**
 	 * Searches for a registered doc widget with the given ObjectName
@@ -627,6 +629,11 @@ signals:
      * The focused dock widget is the one that is highlighted in the GUI
      */
     void focusedDockWidgetChanged(ads::CDockWidget* old, ads::CDockWidget* now);
+
+    /**
+     * This signal is emitted if goemetry of any floating containers changed
+     */
+    void floatingGeometryChanged();
 }; // class DockManager
 } // namespace ads
 //-----------------------------------------------------------------------------

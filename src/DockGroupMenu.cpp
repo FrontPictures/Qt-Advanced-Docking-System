@@ -113,6 +113,11 @@ void CDockGroupMenu::addWidget(const QString &groupName, CDockWidget *widget, in
     }
 }
 
+void CDockGroupMenu::clear()
+{
+    d->List.clear();
+}
+
 void CDockGroupMenu::removeWidget(CDockWidget *widget)
 {
     for (auto &g : d->List) {
@@ -151,20 +156,17 @@ QMenu *CDockGroupMenu::getMenu(CDockAreaWidget *area)
     std::map<QString, std::map<QString, QAction *>> groupActions;
 
     const auto &widgetsList = d->DockManager->dockWidgetsMap();
-    // adding all widgets
-    // if widget tabbed - opening it
+    // adding actions for all widgets
+    // if widget tabbed - open it
     for (const auto &w : widgetsList) {
         QAction *action = nullptr;
-        if (w->dockAreaWidget() == area) {
-            action = new QAction(w->windowTitle());
-            connect(action, &QAction::triggered, this, [=]() { w->toggleView(true); });
-        } else {
-            action = new QAction(w->windowTitle());
-            connect(action, &QAction::triggered, this, [=]() {
-                d->DockManager->addDockWidgetTabToArea(w, area);
-                w->toggleView(true);
-            });
-        }
+        action = new QAction(w->windowTitle());
+        connect(action, &QAction::triggered, this, [this, area, w]() {
+            if (w->dockAreaWidget() != area) {
+                d->DockManager->moveDockWidgetTabToArea(w, area);
+            }
+            w->toggleView(true);
+        });
         const auto groupName = w->getGroupName();
         groupActions[groupName].insert({action->text(), action});
     }

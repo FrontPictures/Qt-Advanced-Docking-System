@@ -1,5 +1,8 @@
-if (UNIX)
-	find_package(Qt5 5.5 COMPONENTS X11Extras REQUIRED)
+project(Qt-Advanced-Docking-System)
+add_library(${PROJECT_NAME} STATIC)
+
+if(UNIX)
+    find_package(Qt5 COMPONENTS Widgets X11Extras REQUIRED)
 endif()
 set(ads_SRCS
     ads_globals.cpp
@@ -53,7 +56,14 @@ endif()
 target_sources(${PROJECT_NAME} PRIVATE ${ads_SRCS} ${ads_HEADERS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_compile_definitions(${PROJECT_NAME} PRIVATE ADS_STATIC)
+target_compile_definitions(${PROJECT_NAME} PUBLIC ADS_STATIC)
+target_link_libraries(${PROJECT_NAME}
+    NMLogger
+    Qt5::Widgets
+    )
 if (UNIX)
-    target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::X11Extras)
+    target_link_libraries(${PROJECT_NAME}
+        Qt5::X11Extras
+        xcb
+        )
 endif()

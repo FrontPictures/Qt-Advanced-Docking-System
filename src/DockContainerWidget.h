@@ -83,7 +83,7 @@ protected:
 	/**
 	 * Access function for the internal root splitter
 	 */
-	QSplitter* rootSplitter() const;
+    Splitter *rootSplitter() const;
 
 	/**
 	 * Helper function for creation of the root splitter
@@ -155,12 +155,6 @@ protected:
      */
     QList<CDockWidget*> dockWidgets() const;
 
-    /**
-     * This function forces the dock container widget to update handles of splitters
-     * based on resize modes of dock widgets contained in the container.
-     */
-    void updateSplitterHandles(QSplitter* splitter);
-
 public:
 	/**
 	 * Default Constructor
@@ -186,6 +180,11 @@ public:
 	 * Removes dockwidget
 	 */
 	void removeDockWidget(CDockWidget* Dockwidget);
+
+    void dropIntoSection(CFloatingDockContainer *FloatingWidget,
+                         CDockAreaWidget *TargetArea, DockWidgetArea area);
+
+    void dropIntoContainer(CFloatingDockContainer *FloatingWidget, DockWidgetArea area);
 
 	/**
 	 * Returns the current zOrderIndex

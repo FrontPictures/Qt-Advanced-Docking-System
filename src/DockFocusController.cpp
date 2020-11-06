@@ -29,6 +29,10 @@
 #include "linux/FloatingWidgetTitleBar.h"
 #endif
 
+#define RE_LOG_ENABLE
+//#define RE_LOG_DEBUG_ENABLE
+#include "NMLogger.h"
+
 namespace ads
 {
 /**
@@ -374,7 +378,6 @@ void CDockFocusController::notifyFloatingWidgetDrop(CFloatingDockContainer* Floa
 	auto DockWidget = vDockWidget.value<CDockWidget*>();
 	if (DockWidget)
 	{
-		d->FocusedDockWidget = nullptr;
 		DockWidget->dockAreaWidget()->setCurrentDockWidget(DockWidget);
 		CDockManager::setWidgetFocus(DockWidget->tabWidget());
 	}

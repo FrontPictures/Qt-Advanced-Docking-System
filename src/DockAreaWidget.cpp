@@ -38,11 +38,10 @@
 #include <QPushButton>
 #include <QDebug>
 #include <QMenu>
-#include <QSplitter>
 #include <QXmlStreamWriter>
 #include <QVector>
 #include <QList>
-
+#include <QTimer>
 
 #include "DockContainerWidget.h"
 #include "DockWidget.h"
@@ -71,9 +70,6 @@ static const char* const ACTION_PROPERTY = "action";
 /**
  * Internal dock area layout mimics stack layout but only inserts the current
  * widget into the internal QLayout object.
- * \warning Only the current widget has a parent. All other widgets
- * do not have a parent. That means, a widget that is in this layout may
- * return nullptr for its parent() function if it is not the current widget.
  */
 class CDockAreaLayout
 {
@@ -93,7 +89,7 @@ public:
 
 	}
 
-	/**
+    /**
 	 * Returns the number of widgets in this layout
 	 */
 	int count() const
@@ -107,7 +103,6 @@ public:
 	 */
 	void insertWidget(int index, QWidget* Widget)
 	{
-		Widget->setParent(nullptr);
 		if (index < 0)
 		{
 			index = m_Widgets.count();
@@ -133,11 +128,7 @@ public:
 	{
 		if (currentWidget() == Widget)
 		{
-			auto LayoutItem = m_ParentLayout->takeAt(1);
-			if (LayoutItem)
-			{
-				LayoutItem->widget()->setParent(nullptr);
-			}
+            delete m_ParentLayout->takeAt(1);
 			m_CurrentWidget = nullptr;
 			m_CurrentIndex = -1;
 		}
@@ -177,12 +168,7 @@ public:
 			parent->setUpdatesEnabled(false);
 		}
 
-		auto LayoutItem = m_ParentLayout->takeAt(1);
-		if (LayoutItem)
-		{
-			LayoutItem->widget()->setParent(nullptr);
-		}
-		delete LayoutItem;
+        delete m_ParentLayout->takeAt(1);
 
 		m_ParentLayout->addWidget(next);
 		if (prev)
@@ -242,7 +228,6 @@ public:
 
 
 
-using DockAreaLayout = CDockAreaLayout;
 static const DockWidgetAreas DefaultAllowedAreas = AllDockAreas;
 
 
@@ -253,13 +238,14 @@ struct DockAreaWidgetPrivate
 {
 	CDockAreaWidget*	_this			= nullptr;
 	QBoxLayout*			Layout			= nullptr;
-	DockAreaLayout*		ContentsLayout	= nullptr;
+    CDockAreaLayout*	ContentsLayout	= nullptr;
 	CDockAreaTitleBar*	TitleBar		= nullptr;
 	CDockManager*		DockManager		= nullptr;
 	bool UpdateTitleBarButtons = false;
 	DockWidgetAreas		AllowedAreas	= DefaultAllowedAreas;
 	QSize MinSizeHint;
 	CDockAreaWidget::DockAreaFlags Flags{CDockAreaWidget::DefaultFlags};
+    bool m_unassigned = false;
 
 	/**
 	 * Private data constructor
@@ -383,19 +369,18 @@ CDockAreaWidget::CDockAreaWidget(CDockManager* DockManager, CDockContainerWidget
 	setLayout(d->Layout);
 
 	d->createTitleBar();
-	d->ContentsLayout = new DockAreaLayout(d->Layout);
+    d->ContentsLayout = new CDockAreaLayout(d->Layout);
 	if (d->DockManager)
 	{
 		emit d->DockManager->dockAreaCreated(this);
-        connect(d->DockManager, &CDockManager::dockWidgetAdded, this, [=](CDockWidget*){
-            updateGroupMenu();
-        });
-        connect(d->DockManager, &CDockManager::dockWidgetRemoved, this, [=](CDockWidget*){
-            updateGroupMenu();
-        });
-        connect(d->DockManager, &CDockManager::dockWidgetRenamed, this, [=](CDockWidget*){
-            updateGroupMenu();
-        });
+        auto delayedMenuUpdate = [this]() {
+            // postpone menu update to allow groupMenu's list updated after widget added/renamed
+            QTimer::singleShot(100, this, &CDockAreaWidget::updateGroupMenu);
+        };
+        connect(d->DockManager, &CDockManager::dockWidgetAdded, this, delayedMenuUpdate);
+        connect(d->DockManager, &CDockManager::dockWidgetRenamed, this, delayedMenuUpdate);
+        connect(d->DockManager, &CDockManager::dockWidgetRemoved,
+                this, &CDockAreaWidget::updateGroupMenu);
         updateGroupMenu();
 	}
 }
@@ -427,7 +412,6 @@ CDockContainerWidget* CDockAreaWidget::dockContainer() const
 void CDockAreaWidget::addDockWidget(CDockWidget* DockWidget)
 {
 	insertDockWidget(d->ContentsLayout->count(), DockWidget);
-    updateGroupMenu();
 }
 
 
@@ -437,6 +421,9 @@ void CDockAreaWidget::insertDockWidget(int index, CDockWidget* DockWidget,
 {
 	d->ContentsLayout->insertWidget(index, DockWidget);
 	DockWidget->setDockArea(this);
+    if (isUnassignedArea()) {
+        return;
+    }
 	DockWidget->tabWidget()->setDockAreaWidget(this);
 	auto TabWidget = DockWidget->tabWidget();
 	// Inserting the tab will change the current index which in turn will
@@ -454,7 +441,8 @@ void CDockAreaWidget::insertDockWidget(int index, CDockWidget* DockWidget,
 	}
 	// If this dock area is hidden, then we need to make it visible again
 	// by calling DockWidget->toggleViewInternal(true);
-	if (!this->isVisible() && d->ContentsLayout->count() > 1 && !dockManager()->isRestoringState())
+    if (!this->isVisible() && d->ContentsLayout->count() > 1 && !dockManager()->isRestoringState()
+        && !DockWidget->isClosed())
 	{
 		DockWidget->toggleViewInternal(true);
 	}
@@ -479,25 +467,27 @@ void CDockAreaWidget::removeDockWidget(CDockWidget* DockWidget)
 	CDockContainerWidget* DockContainer = dockContainer();
 	if (NextOpenDockWidget)
 	{
-		setCurrentDockWidget(NextOpenDockWidget);
-	}
-	else if (d->ContentsLayout->isEmpty() && DockContainer->dockAreaCount() >= 1)
-	{
+        setCurrentDockWidget(NextOpenDockWidget);
+    } else if (d->ContentsLayout->isEmpty() && DockContainer
+               && DockContainer->dockAreaCount() >= 1) {
         RE_LOG_DEBUG("Dock Area empty");
-		DockContainer->removeDockArea(this);
-		this->deleteLater();
-		if(DockContainer->dockAreaCount() == 0)
-		{
-			if(CFloatingDockContainer*  FloatingDockContainer = DockContainer->floatingWidget())
-			{
-				FloatingDockContainer->hide();
-				FloatingDockContainer->deleteLater();
-			}
-		}
-	}
-	else if (DockWidget == CurrentDockWidget)
-	{
-		// if contents layout is not empty but there are no more open dock
+        if (!isUnassignedArea()) {
+            DockContainer->removeDockArea(this);
+            this->deleteLater();
+        }
+        if (DockContainer->dockAreaCount() == 0 && DockContainer->floatingWidget()) {
+            // remove empty floating widget
+            // postpone removal, because new widgets might be added to it later
+            QTimer::singleShot(0, DockContainer, [DockContainer]() {
+                if (DockContainer->dockAreaCount() == 0) {
+                    if (CFloatingDockContainer *floating = DockContainer->floatingWidget()) {
+                        floating->deleteLater();
+                    }
+                }
+            });
+        }
+    } else if (DockWidget == CurrentDockWidget) {
+        // if contents layout is not empty but there are no more open dock
 		// widgets, then we need to hide the dock area because it does not
 		// contain any visible content
 		hideAreaWithNoVisibleContent();
@@ -506,16 +496,18 @@ void CDockAreaWidget::removeDockWidget(CDockWidget* DockWidget)
 	d->updateTitleBarButtonStates();
 	updateTitleBarVisibility();
 	d->updateMinimumSizeHint();
-	auto TopLevelDockWidget = DockContainer->topLevelDockWidget();
-	if (TopLevelDockWidget)
-	{
-		TopLevelDockWidget->emitTopLevelChanged(true);
-	}
+    if (DockContainer) {
+        auto TopLevelDockWidget = DockContainer->topLevelDockWidget();
+        if (TopLevelDockWidget) {
+            TopLevelDockWidget->emitTopLevelChanged(true);
+        }
+    }
 
 #if (ADS_DEBUG_LEVEL > 0)
-	DockContainer->dumpLayout();
+    if (DockContainer) {
+        DockContainer->dumpLayout();
+    }
 #endif
-    updateGroupMenu();
 }
 
 
@@ -525,11 +517,14 @@ void CDockAreaWidget::hideAreaWithNoVisibleContent()
 	this->toggleView(false);
 
 	// Hide empty parent splitters
-	auto Splitter = internal::findParent<CDockSplitter*>(this);
-	internal::hideEmptyParentSplitters(Splitter);
+    auto splitter = internal::findParent<Splitter*>(this);
+    internal::hideEmptyParentSplitters(splitter);
 
 	//Hide empty floating widget
 	CDockContainerWidget* Container = this->dockContainer();
+    if (!Container) {
+        return;
+    }
 	if (!Container->isFloating() && !CDockManager::testConfigFlag(CDockManager::HideSingleCentralWidgetTitleBar))
 	{
 		return;
@@ -765,7 +760,6 @@ void CDockAreaWidget::toggleDockWidgetView(CDockWidget* DockWidget, bool Open)
 	Q_UNUSED(DockWidget);
 	Q_UNUSED(Open);
 	updateTitleBarVisibility();
-    updateGroupMenu();
 }
 
 
@@ -887,6 +881,9 @@ CDockWidget::DockWidgetFeatures CDockAreaWidget::features(eBitwiseOperator Mode)
 //============================================================================
 void CDockAreaWidget::toggleView(bool Open)
 {
+    if (Open && isUnassignedArea()) {
+        return;
+    }
 	setVisible(Open);
 
 	emit viewToggled(Open);
@@ -896,6 +893,9 @@ void CDockAreaWidget::toggleView(bool Open)
 //============================================================================
 void CDockAreaWidget::setVisible(bool Visible)
 {
+    if (Visible && isUnassignedArea()) {
+        return;
+    }
 	Super::setVisible(Visible);
 	if (d->UpdateTitleBarButtons)
 	{
@@ -996,6 +996,16 @@ bool CDockAreaWidget::isCentralWidgetArea() const
     }
 
     return dockManager()->centralWidget() == dockWidgets()[0];
+}
+
+bool CDockAreaWidget::isUnassignedArea() const
+{
+    return d->m_unassigned;
+}
+
+void CDockAreaWidget::setUnassigned()
+{
+    d->m_unassigned = true;
 }
 
 

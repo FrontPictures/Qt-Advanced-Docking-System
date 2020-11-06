@@ -41,6 +41,8 @@ public:
      */
     void addWidget(const QString &groupName, CDockWidget *widget, int index = -1);
 
+    void clear();
+
     /**
      * Remove widget
      */

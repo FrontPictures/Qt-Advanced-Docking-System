@@ -317,6 +317,9 @@ public:
      */
     bool isCentralWidgetArea() const;
 
+    bool isUnassignedArea() const;
+    void setUnassigned();
+
 public slots:
 	/**
 	 * This activates the tab for the given tab index.

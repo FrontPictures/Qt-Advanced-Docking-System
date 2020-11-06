@@ -83,7 +83,7 @@ QScrollArea#dockWidgetScrollArea {
 	qproperty-iconSize: 16px;	
 }
 
-ads--CDockSplitter::handle {
+ads--Splitter::handle {
 	background-color: palette(dark);
 	/* uncomment the following line if you would like to change the size of
        the splitter handles */

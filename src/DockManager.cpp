@@ -117,6 +117,7 @@ struct DockManagerPrivate
 	QVector<CFloatingDockContainer*> UninitializedFloatingWidgets;
 	CDockFocusController* FocusController = nullptr;
     CDockWidget* CentralWidget = nullptr;
+    CDockAreaWidget *unassignedArea = nullptr;
 
 	/**
 	 * Private data constructor
@@ -159,14 +160,6 @@ struct DockManagerPrivate
 		for (auto FloatingWidget : FloatingWidgets)
 		{
 			FloatingWidget->hide();
-		}
-	}
-
-	void markDockWidgetsDirty()
-	{
-		for (auto DockWidget : DockWidgetsMap)
-		{
-			DockWidget->setProperty("dirty", true);
 		}
 	}
 
@@ -314,6 +307,19 @@ bool DockManagerPrivate::restoreStateFromXml(const QByteArray &state,  int versi
 		}
     }
 
+    QList<CDockWidget *> oldDockWidgets;
+    if (!Testing) {
+        // remove all dockwidgets from containers, but not from dockManager
+        oldDockWidgets = DockWidgetsMap.values();
+        for (auto w : oldDockWidgets) {
+            if (!w->dockAreaWidget()) {
+                RE_LOG_ERROR("Widget has no area: %s", w->objectName());
+            }
+            _this->moveDockWidgetToUnassigned(w);
+            RE_LOG_DEBUG("Removed: %s", w->objectName());
+        }
+    }
+
     int DockContainerCount = 0;
     while (s.readNextStartElement())
     {
@@ -331,13 +337,16 @@ bool DockManagerPrivate::restoreStateFromXml(const QByteArray &state,  int versi
     if (!Testing)
     {
 		// Delete remaining empty floating widgets
-		int FloatingWidgetIndex = DockContainerCount - 1;
-		for (int i = FloatingWidgetIndex; i < FloatingWidgets.count(); ++i)
-		{
-			auto* floatingWidget = FloatingWidgets[i];
+        while (FloatingWidgets.size() > 0 && FloatingWidgets.size() > DockContainerCount - 1) {
+            auto* floatingWidget = FloatingWidgets.back();
+            if (floatingWidget->dockContainer()->dockAreaCount() != 0) {
+                RE_LOG_ERROR("Floating widget is not empty");
+                break;
+            }
 			_this->removeDockContainer(floatingWidget->dockContainer());
 			floatingWidget->deleteLater();
-		}
+            FloatingWidgets.pop_back();
+        }
     }
 
     return Result;
@@ -397,21 +406,9 @@ bool DockManagerPrivate::restoreFloatingGeometryFromXml(const QByteArray &state,
 //============================================================================
 void DockManagerPrivate::restoreDockWidgetsOpenState()
 {
-    // All dock widgets, that have not been processed in the restore state
-    // function are invisible to the user now and have no assigned dock area
-    // They do not belong to any dock container, until the user toggles the
-    // toggle view action the next time
     for (auto DockWidget : DockWidgetsMap)
     {
-    	if (DockWidget->property(internal::DirtyProperty).toBool())
-    	{
-    		DockWidget->flagAsUnassigned();
-            emit DockWidget->viewToggled(false);
-    	}
-    	else
-    	{
-    		DockWidget->toggleViewInternal(!DockWidget->property(internal::ClosedProperty).toBool());
-    	}
+        DockWidget->toggleViewInternal(!DockWidget->isClosed());
     }
 }
 
@@ -492,7 +489,6 @@ bool DockManagerPrivate::restoreState(const QByteArray& State, int version)
 
     // Hide updates of floating widgets from use
     hideFloatingWidgets();
-    markDockWidgetsDirty();
 
     if (!restoreStateFromXml(state, version))
     {
@@ -581,6 +577,10 @@ CDockManager::CDockManager(QWidget *parent) :
 #ifdef Q_OS_LINUX
 	window()->installEventFilter(this);
 #endif
+
+    d->unassignedArea = new CDockAreaWidget(this, this);
+    d->unassignedArea->hide();
+    d->unassignedArea->setUnassigned();
 }
 
 //============================================================================
@@ -592,6 +592,7 @@ CDockManager::~CDockManager()
 		delete FloatingWidget;
 	}
 	delete d;
+    d = nullptr;
 }
 
 //============================================================================
@@ -663,6 +664,27 @@ bool CDockManager::eventFilter(QObject *obj, QEvent *e)
 void CDockManager::registerFloatingWidget(CFloatingDockContainer* FloatingWidget)
 {
 	d->FloatingWidgets.append(FloatingWidget);
+
+    connect(FloatingWidget->dockContainer(),
+            &CDockContainerWidget::currentDockWidgetChanged,
+            this,
+            &CDockContainerWidget::currentDockWidgetChanged);
+
+    connect(FloatingWidget->dockContainer(),
+            &CDockContainerWidget::dockWidgetsReordered,
+            this,
+            &CDockContainerWidget::dockWidgetsReordered);
+
+    connect(FloatingWidget,
+            &CFloatingDockContainer::geomertyChanged,
+            this,
+            &CDockManager::floatingGeometryChanged);
+
+    connect(FloatingWidget->dockContainer(),
+            &CDockContainerWidget::splitterMoved,
+            this,
+            &CDockManager::layoutChanged);
+
     emit floatingWidgetCreated(FloatingWidget);
     ADS_PRINT("d->FloatingWidgets.count() " << d->FloatingWidgets.count());
 }
@@ -782,6 +804,7 @@ bool CDockManager::restoreState(const QByteArray &state, int version)
 	}
 	d->RestoringState = true;
 	emit restoringState();
+    RE_LOG_DEBUG("restoring state: \n%s", state.toStdString());
 	bool Result = d->restoreState(state, version);
 	d->RestoringState = false;
 	if (!IsHidden)
@@ -863,34 +886,62 @@ bool CDockManager::restoreFloatingGeometry(const QByteArray &state, int version)
 //============================================================================
 CFloatingDockContainer* CDockManager::addDockWidgetFloating(CDockWidget* Dockwidget, bool hide)
 {
+    if (d->DockWidgetsMap.contains(Dockwidget->objectName())) {
+        RE_LOG_ERROR("Dock widget name duplicate: %s", Dockwidget->objectName());
+        return nullptr;
+    }
 	d->DockWidgetsMap.insert(Dockwidget->objectName(), Dockwidget);
     connect(Dockwidget, &CDockWidget::viewToggled, [=](bool){
         emit layoutChanged();
     });
-	CDockAreaWidget* OldDockArea = Dockwidget->dockAreaWidget();
-	if (OldDockArea)
-	{
-		OldDockArea->removeDockWidget(Dockwidget);
-	}
 
 	Dockwidget->setDockManager(this);
 	CFloatingDockContainer* FloatingWidget = new CFloatingDockContainer(Dockwidget);
 	FloatingWidget->resize(Dockwidget->size());
-    if (isVisible() && !hide)
-	{
-		FloatingWidget->show();
-    }
-    else if(!hide)
-	{
-		d->UninitializedFloatingWidgets.append(FloatingWidget);
-	}
-    else
-    {
-        Dockwidget->closeDockWidget();
+    if (!hide) {
+        if (isVisible()) {
+            FloatingWidget->show();
+        } else {
+            d->UninitializedFloatingWidgets.append(FloatingWidget);
+        }
+    } else {
+        Dockwidget->toggleView(false);
         FloatingWidget->hide();
     }
     emit dockWidgetAdded(Dockwidget);
     return FloatingWidget;
+}
+
+void CDockManager::addDockWidgetUnassigned(CDockWidget *Dockwidget)
+{
+    if (d->DockWidgetsMap.contains(Dockwidget->objectName())) {
+        RE_LOG_ERROR("Dock widget name duplicate: %s", Dockwidget->objectName());
+        return;
+    }
+    if (!Dockwidget->isClosed()) {
+        Dockwidget->toggleViewInternal(false);
+    }
+    d->DockWidgetsMap.insert(Dockwidget->objectName(), Dockwidget);
+    connect(Dockwidget, &CDockWidget::viewToggled, [=](bool){
+        emit layoutChanged();
+    });
+    Dockwidget->setDockManager(this);
+    moveDockWidgetToUnassigned(Dockwidget);
+    emit dockWidgetAdded(Dockwidget);
+}
+
+void CDockManager::moveDockWidgetToUnassigned(CDockWidget *Dockwidget)
+{
+    if (auto area = Dockwidget->dockAreaWidget()) {
+        if (area == d->unassignedArea) {
+            return;
+        }
+        area->removeDockWidget(Dockwidget);
+    }
+    if (!Dockwidget->isClosed()) {
+        Dockwidget->toggleViewInternal(false);
+    }
+    d->unassignedArea->insertDockWidget(d->unassignedArea->dockWidgetsCount(), Dockwidget, false);
 }
 
 
@@ -915,7 +966,11 @@ void CDockManager::showEvent(QShowEvent *event)
 CDockAreaWidget* CDockManager::addDockWidget(DockWidgetArea area,
 	CDockWidget* Dockwidget, CDockAreaWidget* DockAreaWidget)
 {
-	d->DockWidgetsMap.insert(Dockwidget->objectName(), Dockwidget);
+    if (d->DockWidgetsMap.contains(Dockwidget->objectName())) {
+        RE_LOG_ERROR("Dock widget name duplicate: %s", Dockwidget->objectName());
+        return nullptr;
+    }
+    d->DockWidgetsMap.insert(Dockwidget->objectName(), Dockwidget);
     connect(Dockwidget, &CDockWidget::viewToggled, [=](bool){
         emit layoutChanged();
     });
@@ -946,10 +1001,15 @@ CDockAreaWidget* CDockManager::addDockWidgetTab(DockWidgetArea area,
 
 
 //============================================================================
-CDockAreaWidget* CDockManager::addDockWidgetTabToArea(CDockWidget* Dockwidget,
+CDockAreaWidget* CDockManager::moveDockWidgetTabToArea(CDockWidget* Dockwidget,
 	CDockAreaWidget* DockAreaWidget)
 {
-	return addDockWidget(ads::CenterDockWidgetArea, Dockwidget, DockAreaWidget);
+    if (!d->DockWidgetsMap.contains(Dockwidget->objectName())) {
+        RE_LOG_ERROR("Dock widget is not added yet: %s", Dockwidget->objectName());
+        return nullptr;
+    }
+    return CDockContainerWidget::addDockWidget(ads::CenterDockWidgetArea, Dockwidget,
+                                                 DockAreaWidget);
 }
 
 

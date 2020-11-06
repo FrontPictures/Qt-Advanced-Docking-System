@@ -609,9 +609,10 @@ CFloatingDockContainer::CFloatingDockContainer(CDockManager *DockManager) :
 #ifdef Q_OS_LINUX
 	QDockWidget::setWidget(d->DockContainer);
 	QDockWidget::setFloating(true);
-	QDockWidget::setFeatures(QDockWidget::AllDockWidgetFeatures);
+    QDockWidget::setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable
+                             | QDockWidget::DockWidgetFloatable);
 
-	bool native_window = true;
+    bool native_window = true;
 
 	// FloatingContainerForce*TitleBar is overwritten by the "ADS_UseNativeTitle" environment variable if set.
 	auto env = qgetenv("ADS_UseNativeTitle").toUpper();
@@ -859,6 +860,18 @@ void CFloatingDockContainer::showEvent(QShowEvent *event)
         this->window()->activateWindow();
     }
 #endif
+}
+
+void CFloatingDockContainer::resizeEvent(QResizeEvent *event)
+{
+    Super::resizeEvent(event);
+    emit geomertyChanged();
+}
+
+void CFloatingDockContainer::moveEvent(QMoveEvent *event)
+{
+    Super::moveEvent(event);
+    emit geomertyChanged();
 }
 
 
@@ -1211,15 +1224,16 @@ void CFloatingDockContainer::show()
 	Super::show();
 }
 
-
+#ifndef Q_OS_LINUX
 //============================================================================
 void CFloatingDockContainer::resizeEvent(QResizeEvent *event)
 {
 	d->IsResizing = true;
 	Super::resizeEvent(event);
 }
+#endif
 
-
+#if !defined(Q_OS_LINUX) && !defined(Q_OS_MACOS)
 //============================================================================
 void CFloatingDockContainer::moveEvent(QMoveEvent *event)
 {
@@ -1231,7 +1245,7 @@ void CFloatingDockContainer::moveEvent(QMoveEvent *event)
 	}
 	d->IsResizing = false;
 }
-
+#endif
 
 //============================================================================
 bool CFloatingDockContainer::hasNativeTitleBar()

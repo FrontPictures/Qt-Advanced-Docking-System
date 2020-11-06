@@ -35,7 +35,6 @@
 
 #include <QBoxLayout>
 #include <QAction>
-#include <QSplitter>
 #include <QStack>
 #include <QScrollArea>
 #include <QTextStream>
@@ -156,11 +155,11 @@ void DockWidgetPrivate::showDockWidget()
 		DockArea->setCurrentDockWidget(_this);
 		DockArea->toggleView(true);
 		TabWidget->show();
-		QSplitter* Splitter = internal::findParent<QSplitter*>(DockArea);
-		while (Splitter && !Splitter->isVisible())
+        Splitter* splitter = internal::findParent<Splitter*>(DockArea);
+        while (splitter && !splitter->isVisible())
 		{
-			Splitter->show();
-			Splitter = internal::findParent<QSplitter*>(Splitter);
+            splitter->show();
+            splitter = internal::findParent<Splitter*>(splitter);
 		}
 
 		CDockContainerWidget* Container = DockArea->dockContainer();
@@ -262,6 +261,7 @@ CDockWidget::CDockWidget(const QString &title, QWidget *parent) :
 CDockWidget::~CDockWidget()
 {
     ADS_PRINT("~CDockWidget()");
+    RE_LOG("Deleting dock widget: %s", objectName());
 	delete d;
 }
 
@@ -322,11 +322,6 @@ QWidget* CDockWidget::takeWidget()
         w = d->Widget;
 	}
     d->Widget = nullptr;
-
-	if (w)
-	{
-		w->setParent(nullptr);
-	}
     return w;
 }
 
@@ -507,6 +502,10 @@ void CDockWidget::toggleView(bool Open)
 	{
 		Open = true;
 	}
+    if (!Open && d->DockManager) {
+        d->DockManager->moveDockWidgetToUnassigned(this);
+        return;
+    }
 	// If the dock widget state is different, then we really need to toggle
 	// the state. If we are in the right state, then we simply make this
 	// dock widget the current dock widget
@@ -517,7 +516,7 @@ void CDockWidget::toggleView(bool Open)
 	else if (Open && d->DockArea)
 	{
 		d->DockArea->setCurrentDockWidget(this);
-	}
+    }
 }
 
 
@@ -550,18 +549,15 @@ void CDockWidget::toggleViewInternal(bool Open)
 		CDockWidget::emitTopLevelEventForWidget(TopLevelDockWidgetBefore, false);
 	}
 
-	// Here we need to call the dockContainer() function again, because if
-	// this dock widget was unassigned before the call to showDockWidget() then
-	// it has a dock container now
-	DockContainer = dockContainer();
 	CDockWidget* TopLevelDockWidgetAfter = DockContainer
 		? DockContainer->topLevelDockWidget() : nullptr;
 	CDockWidget::emitTopLevelEventForWidget(TopLevelDockWidgetAfter, true);
-	CFloatingDockContainer* FloatingContainer = DockContainer->floatingWidget();
-	if (FloatingContainer)
-	{
-		FloatingContainer->updateWindowTitle();
-	}
+    if (DockContainer) {
+        CFloatingDockContainer *FloatingContainer = DockContainer->floatingWidget();
+        if (FloatingContainer) {
+            FloatingContainer->updateWindowTitle();
+        }
+    }
 
 	if (!Open)
 	{
@@ -576,7 +572,9 @@ void CDockWidget::setDockArea(CDockAreaWidget* DockArea)
 {
 	d->DockArea = DockArea;
 	d->ToggleViewAction->setChecked(DockArea != nullptr && !this->isClosed());
-	setParent(DockArea);
+    if(DockArea) {
+        setParent(DockArea);
+    }
 }
 
 
@@ -587,17 +585,6 @@ void CDockWidget::saveState(QXmlStreamWriter& s) const
 	s.writeAttribute("Name", objectName());
 	s.writeAttribute("Closed", QString::number(d->Closed ? 1 : 0));
 	s.writeEndElement();
-}
-
-
-//============================================================================
-void CDockWidget::flagAsUnassigned()
-{
-	d->Closed = true;
-	setParent(d->DockManager);
-	setVisible(false);
-	setDockArea(nullptr);
-	tabWidget()->setParent(this);
 }
 
 
